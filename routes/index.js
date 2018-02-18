@@ -4,7 +4,7 @@ var db = require('../models/db');
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-  res.render('index', { title: 'Express_server' });
+  res.render('index', { title: 'Express_yoyo' });
 });
 
 router.get('/test',function(req,res,next){
