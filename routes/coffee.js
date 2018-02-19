@@ -4,7 +4,7 @@ var db = require('../models/db');
 
 // show coffee list
 router.get('/', function(req, res, next) {
-    db.getCoffee(req,function(success){
+    db.getCoffeeTemp(req,function(success){
         res.json(success);
       })
 });
@@ -13,7 +13,7 @@ router.get('/', function(req, res, next) {
 // show coffee detail
 router.get('/:coffee_id', function(req, res, next) {
     console.log("coffee_id : ",req.params.coffee_id);
-    db.getCoffeeDetail(req.params.coffee_id,function(success){
+    db.getCoffeeDetailTemp(req.params.coffee_id,function(success){
         res.json(success);
     })
   });

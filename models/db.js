@@ -23,6 +23,8 @@ exports.test = function (data, callback) {
 };
 
 
+
+
 exports.getCoffee = function (data, callback) {
     pool.getConnection(function (err, connection) {
         var obj=[];
@@ -108,6 +110,83 @@ exports.getCoffeeDetail = function (data, callback) {
                 })
             })
 };
+
+
+
+
+exports.getCoffeeDetailTemp = function (data, callback) {
+    if(data==1){
+        var obj = [
+            {
+             "coffee_id" : 1,
+             "name" : "아메리카노",
+             "price"  : 3000,
+             "picture_url" : "https://s3.ap-northeast-2.amazonaws.com/shuttles/coffee/americano.jpg",
+             "description" : "",
+             option : [
+                 {  "option_id" : 1,
+                     "option_name" : "샷추가",
+                     "price " : 500 },
+ 
+                  {   "option_id" : 2,
+                     "option_name" : "망고더",
+                     "price " : "1000" },
+             ]
+         } 
+     ]
+     callback(obj);
+    }
+    else{
+        var obj = [
+            {
+             "coffee_id" : 2,
+             "name" : "아이스라떼",
+             "price"  : 3500,
+             "picture_url" : "https://s3.ap-northeast-2.amazonaws.com/shuttles/coffee/latte.jpg",
+             "description" : "",
+             option : [
+                 {  "option_id" : 1,
+                     "option_name" : "샷추가",
+                     "price " : 500 },
+ 
+                  {   "option_id" : 2,
+                     "option_name" : "망고더",
+                     "price " : "1000" },
+             ]
+         } 
+     ]
+     callback(obj);
+    }
+   
+};
+
+
+
+
+exports.getCoffeeTemp = function (data, callback) {
+   var obj = [
+       {
+            "coffee_id" : 1,
+            "name" : "아메리카노",
+            "price"  : 3000,
+            "picture_url" : "https://s3.ap-northeast-2.amazonaws.com/shuttles/coffee/americano.jpg",
+            "state" : "coffee"
+
+       } 
+       ,
+       {
+        "coffee_id" : 2,
+        "name" : "아이스라떼",
+        "price"  : 3500,
+        "picture_url" : "https://s3.ap-northeast-2.amazonaws.com/shuttles/coffee/latte.jpg",
+        "state" : "latte"
+   } 
+
+   ];
+   callback(obj);
+
+};
+
 
 
 exports.getOrderListTemp = function(user_id,callback){
