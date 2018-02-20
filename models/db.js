@@ -513,12 +513,8 @@ exports.getOrderDetail = function(order_id,callback){
 
 
 exports.insertOrder = function (data, callback) {
-    pool.getConnection(function(err,connection){
-        
-
-
-
-    });
+    var obj =[{"success" : "ok"}];
+    callback(obj);
 }
 
 

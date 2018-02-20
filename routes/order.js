@@ -23,7 +23,7 @@ router.get('/detail/:order_id',function(req,res,next){
 
   // insert order
 router.post('/',function(req,res,next){
-  db.insertOrderTemp(req,function(success){
+  db.insertOrder(req,function(success){
     res.json(success);
   })
 });
