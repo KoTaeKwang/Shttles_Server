@@ -139,7 +139,7 @@ exports.getCoffeeTodayMenu = function(data,callback){
         })
     },function(coffeeTodayMenu,callback){
         if(coffeeTodayMenu.length==0) callback(null,obj)
-            
+   
         forEach(coffeeTodayMenu,function(item,index,arr){
             var objTemp = {
                 "coffee_id" : coffeeTodayMenu[index].coffee_id,
@@ -197,34 +197,30 @@ exports.getCoffeeCombiMenu = function(data,callback){
 
 
 
-
-
-
-
-
-
-
 exports.getCoffeeMyMenu = function(user_id,callback){
+    console.log("user_id : ",user_id)
    var obj =[];
     async.waterfall([
         function(callback){
             pool.getConnection(function(err,connection){
-                var myMenuSql = "Select coffee_id from where user_id = ?";
+                var myMenuSql = "Select coffee_id from myDrinkMenu where user_id = ?";
 
                 connection.query(myMenuSql,user_id,function(err,myMenu){
                     callback(null,myMenu);
                 })
             })
         },function(myMenu,callback){
-            
+
             if(myMenu.length==0) callback(null,obj);
 
             pool.getConnection(function(err,connection){
-                var coffeeListSql = "Select coffee_id, name, picture_url, picture_version, description where coffee_id = ?";
+                var coffeeListSql = "Select coffee_id, name, picture_url, picture_version, description from coffee where coffee_id = ?";
                 
                 forEach(myMenu,function(item,index,arr){
 
                     connection.query(coffeeListSql,myMenu[index].coffee_id,function(err,coffeeList){
+                        console.log("coffeeList : ",coffeeList);
+                      
                         var objTemp = {
                                 "coffee_id" : coffeeList[0].coffee_id,
                                 "name" : coffeeList[0].name,
@@ -232,6 +228,7 @@ exports.getCoffeeMyMenu = function(user_id,callback){
                                 "version" : coffeeList[0].picture_version,
                                 "description" : coffeeList[0].description
                         }
+                      
                         obj.push(objTemp);
 
                      if(index==myMenu.length-1)

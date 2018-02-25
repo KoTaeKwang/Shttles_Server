@@ -11,7 +11,7 @@ router.get('/list', function(req, res, next) {
   
 
 // show coffee detail
-router.get('/:coffee_id', function(req, res, next) {
+router.get('/detail/:coffee_id', function(req, res, next) {
     console.log("coffee_id : ",req.params.coffee_id);
     db.getCoffeeDetail(req.params.coffee_id,function(success){
         res.json(success);
@@ -31,8 +31,8 @@ router.get('/:coffee_id', function(req, res, next) {
     })
   });
 
-  router.get('/myMenu', function(req, res, next) {
-    db.getMarketMyMenu(req.params.user_id,function(success){
+  router.get('/myMenu/:user_id', function(req, res, next) {
+    db.getCoffeeMyMenu(req.params.user_id,function(success){
         res.json(success);
     })
   });
