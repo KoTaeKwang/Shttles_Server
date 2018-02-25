@@ -1,0 +1,29 @@
+var mysql = require('mysql');
+var forEach = require('async-foreach').forEach;
+var async = require('async');
+var HashMap = require('hashmap');
+
+var pool = mysql.createPool({
+    connectionLimit: 10,
+    host: 'localhost',
+    user: 'root',
+    password: '1234',
+    database: 'shuttlesdb'
+});
+
+exports.userAdd = function(data,callback){
+    console.log("user_id : ",data.user_id);
+    var user_id = data.user_id;
+    
+    pool.getConnection(function(err,connection){
+        var addUserSql = "insert into user(user_id) values(?)";
+        connection.query(addUserSql,user_id,function(err,addUser){
+            if(err) throw err;
+            console.log("inserted user : ",user_id);
+            var obj ={"success" : "ok"};
+            callback(obj);
+            connection.release();
+        })
+    })
+}
+
