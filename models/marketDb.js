@@ -49,7 +49,7 @@ exports.getMarketTodayMenu = function(market_name,callback){
     async.waterfall([
         function(callback){
             pool.getConnection(function(err,connection){
-                var marketTodayMenuSql = "Select t.food_id, t.price, f.name, f.picture_url,f.picture_version,f.description from todayMarketMenu AS t Join food AS f ON t.food_id = f.food_id t.where market_name = ?"
+                var marketTodayMenuSql = "Select t.food_id, t.price, f.name, f.picture_url,f.picture_version,f.description from todayMarketMenu AS t Join food AS f ON t.food_id = f.food_id where t.market_name = ?"
                 connection.query(marketTodayMenuSql,market_name,function(err,marketTodayMenu){
                     callback(null,marketTodayMenu);
                 })
@@ -83,7 +83,7 @@ exports.getMarketCombiMenu = function(market_name,callback){
     async.waterfall([
         function(callback){
             pool.getConnection(function(err,connection){
-                var marketCombiMenuSql = "Select t.food_id, t.price, f.name, f.picture_url,f.picture_version,f.description from combiMarketMenu AS t Join food AS f ON t.food_id = f.food_id t.where market_name = ?"
+                var marketCombiMenuSql = "Select t.food_id, t.price, f.name, f.picture_url,f.picture_version,f.description from combiMarketMenu AS t Join food AS f ON t.food_id = f.food_id where t.market_name = ?"
                 connection.query(marketCombiMenuSql,market_name,function(err,marketCombiMenu){
                     callback(null,marketCombiMenu);
                 })
@@ -114,13 +114,15 @@ exports.getMarketCombiMenu = function(market_name,callback){
 }
 
 exports.getMarketMyMenu = function(data,callback){
-    var market_name = data.market_name;
-    var user_id = data.user_id;
+    
+    var market_name = data.params.market_name;
+    var user_id = data.params.user_id;
+
     var obj =[];
     async.waterfall([
         function(callback){
             pool.getConnection(function(err,connection){
-                var markeMyMenuSql = "Select t.food_id, f.price, f.name, f.picture_url,f.picture_version,f.description from myMarketMenu AS t Join food AS f ON t.food_id = f.food_id t.where market_name = ? and user_id = ?"
+                var markeMyMenuSql = "Select t.food_id, f.price, f.name, f.picture_url,f.picture_version,f.description from myMarketMenu AS t Join food AS f ON t.food_id = f.food_id where t.market_name = ? and t.user_id = ?"
                 connection.query(markeMyMenuSql,[market_name,user_id],function(err,markeMyMenu){
                     callback(null,markeMyMenu);
                 })

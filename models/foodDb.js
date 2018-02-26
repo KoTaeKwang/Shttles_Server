@@ -28,7 +28,7 @@ exports.getFoodList = function(market_name,callback){
             })
         },function(foodList,callback){
 
-            if(foodList.length==0) callback(null,obj);
+            if(foodList == null | foodList.length==0) callback(null,obj);
 
             forEach(foodList,function(item,index,arr){
                 var objTemp = {
@@ -60,7 +60,7 @@ exports.getFoodOption = function(food_id,callback){
         function(callback){
             pool.getConnection(function(err,connection){
                 if(err) throw err;
-                connection.query(foodOptionSql,food_id,function(foodOption){
+                connection.query(foodOptionSql,food_id,function(err,foodOption){
                     callback(null,foodOption);
                 })
 
@@ -70,7 +70,7 @@ exports.getFoodOption = function(food_id,callback){
             forEach(foodOption,function(item,index,arr){
                 var objTemp = {
                     "option_id" : foodOption[index].option_id,
-                    "option_name" : foodOption[index].option_name,
+                    "option_name" : foodOption[index].name,
                     "option_price" : foodOption[index].price
                 }
                 obj.push(objTemp);
