@@ -24,7 +24,34 @@ exports.test = function (data, callback) {
 
 
 exports.getCoffee = function (data, callback) {
+    var test= true;
+    if(test){
+        var obj = [
+            {
+            "coffee_id": 1,
+            "name": "아메리카노",
+            "picture_url": "https://s3.ap-northeast-2.amazonaws.com/shuttles/coffee/jimin.png",
+            "picture_version": "V1",
+            "description": null,
+            "price": 3500,
+            "state": "coffee"
+            },
+            {
+            "coffee_id": 2,
+            "name": "라떼",
+            "picture_url": "https://s3.ap-northeast-2.amazonaws.com/shuttles/coffee/jimin.png",
+            "picture_version": "V1",
+            "description": null,
+            "price": 4000,
+            "state": "lattee"
+            }
+            ]
+         callback(obj);   
+         return; 
+    }
     
+
+
     async.waterfall([
         function(callback){
             var coffeeListSql = "Select coffee_id,name,picture_url,description,picture_version from coffee"
@@ -96,6 +123,32 @@ exports.getCoffee = function (data, callback) {
 
 
 exports.getCoffeeDetail = function (coffee_id, callback) {
+    
+    var test= true;
+    if(test){
+        var obj = [
+            {
+            "option_id": 1,
+            "option_name": "과메기추가",
+            "option_price": 500
+            },
+            {
+            "option_id": 2,
+            "option_name": "ice",
+            "option_price": 500
+            },
+            {
+            "option_id": 3,
+            "option_name": "hot",
+            "option_price": 500
+            }
+            ]
+         callback(obj);  
+         return; 
+    }
+    
+    
+    
     var obj = [];
     async.waterfall([
         function(callback){
@@ -127,7 +180,25 @@ exports.getCoffeeDetail = function (coffee_id, callback) {
 
 
 exports.getCoffeeTodayMenu = function(data,callback){
-  var obj =[];
+ 
+    var test= true;
+    if(test){
+        var obj = [
+            {
+            "coffee_id": 1,
+            "name": "아메리카노",
+            "price": 3000,
+            "picture_url": "https://s3.ap-northeast-2.amazonaws.com/shuttles/coffee/jimin.png",
+            "version": "V1",
+            "description": null
+            }
+            ]
+         callback(obj);   
+         return; 
+    }
+ 
+ 
+    var obj =[];
   async.waterfall([
     function(callback){
         pool.getConnection(function(err,connection){
@@ -161,6 +232,23 @@ exports.getCoffeeTodayMenu = function(data,callback){
 };
 
 exports.getCoffeeCombiMenu = function(data,callback){
+    
+    var test= true;
+    if(test){
+        var obj = [
+            {
+            "coffee_id": 2,
+            "name": "라떼",
+            "price": 4000,
+            "picture_url": "https://s3.ap-northeast-2.amazonaws.com/shuttles/coffee/jimin.png",
+            "version": "V1",
+            "description": null
+            }
+            ]
+         callback(obj);   
+         return; 
+    }
+    
     var obj =[];
     async.waterfall([
       function(callback){
@@ -198,6 +286,30 @@ exports.getCoffeeCombiMenu = function(data,callback){
 
 
 exports.getCoffeeMyMenu = function(user_id,callback){
+    
+    var test= true;
+    if(test){
+        var obj = [
+            {
+            "coffee_id": 2,
+            "name": "라떼",
+            "picture_url": "https://s3.ap-northeast-2.amazonaws.com/shuttles/coffee/jimin.png",
+            "version": "V1",
+            "description": null
+            },
+            {
+            "coffee_id": 1,
+            "name": "아메리카노",
+            "picture_url": "https://s3.ap-northeast-2.amazonaws.com/shuttles/coffee/jimin.png",
+            "version": "V1",
+            "description": null
+            }
+            ]
+         callback(obj);   
+         return; 
+    }
+    
+    
     console.log("user_id : ",user_id)
    var obj =[];
     async.waterfall([

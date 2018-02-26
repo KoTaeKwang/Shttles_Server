@@ -13,6 +13,22 @@ var pool = mysql.createPool({
 
 
 exports.getMarketList = function(data,callback){
+   
+
+    var test= true;
+    if(test){
+        var obj = [
+            {
+            "name": "햄버거집"
+            },
+            {
+            "name": "스시집"
+            }
+            ]
+         callback(obj);   
+         return; 
+    }
+   
     var marketListSql = "Select market_name from market"
     var obj =[];
     async.waterfall([
@@ -45,6 +61,32 @@ exports.getMarketList = function(data,callback){
 
 
 exports.getMarketTodayMenu = function(market_name,callback){
+   
+    var test= true;
+    if(test){
+        var obj = [
+            {
+            "food_id": 1,
+            "name": "초밥",
+            "price": 2000,
+            "picture_url": "https://s3.ap-northeast-2.amazonaws.com/shuttles/coffee/jimin.png",
+            "picture_version": "V1",
+            "description": null
+            },
+            {
+            "food_id": 2,
+            "name": "우동",
+            "price": 3000,
+            "picture_url": "https://s3.ap-northeast-2.amazonaws.com/shuttles/coffee/jimin.png",
+            "picture_version": "V1",
+            "description": null
+            }
+            ]
+         callback(obj);  
+         return;  
+    }
+   
+
     var obj =[];
     async.waterfall([
         function(callback){
@@ -79,6 +121,23 @@ exports.getMarketTodayMenu = function(market_name,callback){
 }
 
 exports.getMarketCombiMenu = function(market_name,callback){
+    
+    var test= true;
+    if(test){
+        var obj = [
+            {
+            "food_id": 2,
+            "name": "우동",
+            "price": 3000,
+            "picture_url": "https://s3.ap-northeast-2.amazonaws.com/shuttles/coffee/jimin.png",
+            "picture_version": "V1",
+            "description": null
+            }
+            ]
+         callback(obj);   
+         return; 
+    }
+    
     var obj =[];
     async.waterfall([
         function(callback){
@@ -115,6 +174,22 @@ exports.getMarketCombiMenu = function(market_name,callback){
 
 exports.getMarketMyMenu = function(data,callback){
     
+    var test= true;
+    if(test){
+        var obj = [
+            {
+            "food_id": 2,
+            "name": "우동",
+            "price": 2000,
+            "picture_url": "https://s3.ap-northeast-2.amazonaws.com/shuttles/coffee/jimin.png",
+            "picture_version": "V1",
+            "description": null
+            }
+            ]
+         callback(obj);  
+         return; 
+    }
+
     var market_name = data.params.market_name;
     var user_id = data.params.user_id;
 
