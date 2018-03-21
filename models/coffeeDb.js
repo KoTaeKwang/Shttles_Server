@@ -359,13 +359,16 @@ exports.insertCoffee = function(data,callback){
     var name = data.name;
     console.log("name : ",name);
     pool.getConnection(function(err,connection){
+        if(err) throw err;
+
         var addCoffeeSql = "insert into coffee(name) values( ? )";
         connection.query(addCoffeeSql,name,function(err,addUser){
+            connection.release();
+
             if(err) throw err;
             console.log("inserted coffee: ",name);
             var obj ={"success" : "ok"};
             callback(obj);
-            connection.release();
         })
     })
 
