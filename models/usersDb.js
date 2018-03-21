@@ -8,7 +8,7 @@ var pool = mysql.createPool({
     host: 'localhost',
     user: 'root',
     password: '1234',
-    database: 'shuttlesdb'
+    database: 'shuttlesDB'
 });
 
 exports.userAdd = function(data,callback){
