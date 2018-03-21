@@ -10,7 +10,24 @@ var pool = mysql.createPool({
     password: '1234',
     database: 'shuttlesDB'
 });
+exports.insertMarket = function(data,callback){
+    var name = data.market_name;
+    console.log("name : ",name);
+    pool.getConnection(function(err,connection){
+        if(err) throw err;
 
+        var addCoffeeSql = "insert into market(market_name) values( ? )";
+        connection.query(addCoffeeSql,name,function(err,addUser){
+            connection.release();
+
+            if(err) throw err;
+            console.log("inserted market: ",name);
+            var obj ={"success" : "ok"};
+            callback(obj);
+        })
+    })
+
+}
 
 exports.getMarketList = function(data,callback){
    

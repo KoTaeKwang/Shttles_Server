@@ -33,6 +33,11 @@ router.get('/', function(req, res, next) {
     })
   });
 
+  router.post('/insertMarket',function(req,res,next){
+    db.insertMarket(req.body,function(success){
+        res.json(success);
+    })
+})
 
 
 

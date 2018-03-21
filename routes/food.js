@@ -17,6 +17,10 @@ router.get('/:food_id',function(req,res,next){
 })
 
 
-
+router.post('/insertFood',function(req,res,next){
+    db.insertFood(req.body,function(success){
+        res.json(success);
+    })
+})
 
 module.exports = router;

@@ -11,6 +11,27 @@ var pool = mysql.createPool({
     database: 'shuttlesDB'
 });
 
+exports.insertFood = function(data,callback){
+    var name = data.name;
+    var price = data.price;
+    var market_name = data.market_name;
+
+    console.log("name : ",name);
+    pool.getConnection(function(err,connection){
+        if(err) throw err;
+
+        var addFoodSql = "insert into food(name,price,market_name) values( ?,?,? )";
+        connection.query(addFoodSql,[name,price,market_name],function(err,addUser){
+            connection.release();
+
+            if(err) throw err;
+            console.log("inserted food: ",name);
+            var obj ={"success" : "ok"};
+            callback(obj);
+        })
+    })
+
+}
 
 
 exports.getFoodList = function(market_name,callback){

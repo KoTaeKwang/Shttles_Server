@@ -24,7 +24,7 @@ exports.test = function (data, callback) {
 
 
 exports.getCoffee = function (data, callback) {
-    var test= true;
+    var test= false;
     if(test){
         var obj = [
             {
@@ -57,6 +57,7 @@ exports.getCoffee = function (data, callback) {
             var coffeeListSql = "Select coffee_id,name,picture_url,description,picture_version from coffee"
             pool.getConnection(function(err,connection){
                 connection.query(coffeeListSql,function(err,coffeeList){
+                    connection.release();
                     callback(null,coffeeList);
                 })
             })
@@ -124,7 +125,7 @@ exports.getCoffee = function (data, callback) {
 
 exports.getCoffeeDetail = function (coffee_id, callback) {
     
-    var test= true;
+    var test= false;
     if(test){
         var obj = [
             {
@@ -181,7 +182,7 @@ exports.getCoffeeDetail = function (coffee_id, callback) {
 
 exports.getCoffeeTodayMenu = function(data,callback){
  
-    var test= true;
+    var test= false;
     if(test){
         var obj = [
             {
