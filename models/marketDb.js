@@ -8,14 +8,14 @@ var pool = mysql.createPool({
     host: 'localhost',
     user: 'root',
     password: '1234',
-    database: 'shuttlesdb'
+    database: 'shuttlesDB'
 });
 
 
 exports.getMarketList = function(data,callback){
    
 
-    var test= true;
+    var test= false;
     if(test){
         var obj = [
             {
