@@ -46,7 +46,7 @@ exports.getMarketList = function(data,callback){
          return; 
     }
    
-    var marketListSql = "Select market_name from market"
+    var marketListSql = "Select market_name, market_picture from market"
     var obj =[];
     async.waterfall([
         function(callback){
@@ -63,7 +63,8 @@ exports.getMarketList = function(data,callback){
 
             forEach(marketList,function(item,index,arr){
                 var objTemp = {
-                    "name" : marketList[index].market_name
+                    "market_name" : marketList[index].market_name,
+                    "market_picture" : marketList[index].market_picture
                 }
                 obj.push(objTemp);
 
