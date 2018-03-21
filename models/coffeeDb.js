@@ -24,7 +24,7 @@ exports.test = function (data, callback) {
 
 
 exports.getCoffee = function (data, callback) {
-    var test= false;
+    var test= true;
     if(test){
         var obj = [
             {
@@ -124,7 +124,7 @@ exports.getCoffee = function (data, callback) {
 
 exports.getCoffeeDetail = function (coffee_id, callback) {
     
-    var test= false;
+    var test= true;
     if(test){
         var obj = [
             {
@@ -181,7 +181,7 @@ exports.getCoffeeDetail = function (coffee_id, callback) {
 
 exports.getCoffeeTodayMenu = function(data,callback){
  
-    var test= false;
+    var test= true;
     if(test){
         var obj = [
             {
@@ -233,7 +233,7 @@ exports.getCoffeeTodayMenu = function(data,callback){
 
 exports.getCoffeeCombiMenu = function(data,callback){
     
-    var test= false;
+    var test= true;
     if(test){
         var obj = [
             {
@@ -287,7 +287,7 @@ exports.getCoffeeCombiMenu = function(data,callback){
 
 exports.getCoffeeMyMenu = function(user_id,callback){
     
-    var test= false;
+    var test= true;
     if(test){
         var obj = [
             {
@@ -357,7 +357,7 @@ exports.getCoffeeMyMenu = function(user_id,callback){
 
 exports.insertCoffee = function(data,callback){
     var name = data.name;
-
+    console.log("name : ",name);
     pool.getConnection(function(err,connection){
         var addCoffeeSql = "insert into coffee(name) values( ? )";
         connection.query(addCoffeeSql,name,function(err,addUser){
