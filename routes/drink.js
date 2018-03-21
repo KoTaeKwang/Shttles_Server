@@ -37,6 +37,11 @@ router.get('/detail/:coffee_id', function(req, res, next) {
     })
   });
 
+  router.post('/insertCoffee',function(req,res,next){
+      db.insertCoffee(req.body,function(success){
+          res.json(success);
+      })
+  })
 
 
   

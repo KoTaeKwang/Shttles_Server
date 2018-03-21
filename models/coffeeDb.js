@@ -24,7 +24,7 @@ exports.test = function (data, callback) {
 
 
 exports.getCoffee = function (data, callback) {
-    var test= true;
+    var test= false;
     if(test){
         var obj = [
             {
@@ -124,12 +124,12 @@ exports.getCoffee = function (data, callback) {
 
 exports.getCoffeeDetail = function (coffee_id, callback) {
     
-    var test= true;
+    var test= false;
     if(test){
         var obj = [
             {
             "option_id": 1,
-            "option_name": "과메기추가",
+            "option_name": "과라나추가",
             "option_price": 500
             },
             {
@@ -181,7 +181,7 @@ exports.getCoffeeDetail = function (coffee_id, callback) {
 
 exports.getCoffeeTodayMenu = function(data,callback){
  
-    var test= true;
+    var test= false;
     if(test){
         var obj = [
             {
@@ -233,7 +233,7 @@ exports.getCoffeeTodayMenu = function(data,callback){
 
 exports.getCoffeeCombiMenu = function(data,callback){
     
-    var test= true;
+    var test= false;
     if(test){
         var obj = [
             {
@@ -287,7 +287,7 @@ exports.getCoffeeCombiMenu = function(data,callback){
 
 exports.getCoffeeMyMenu = function(user_id,callback){
     
-    var test= true;
+    var test= false;
     if(test){
         var obj = [
             {
@@ -353,3 +353,20 @@ exports.getCoffeeMyMenu = function(user_id,callback){
         callback(results);
     })
 };
+
+
+exports.insertCoffee = function(data,callback){
+    var name = data.name;
+
+    pool.getConnection(function(err,connection){
+        var addCoffeeSql = "insert into coffee(name) values( ? )";
+        connection.query(addCoffeeSql,name,function(err,addUser){
+            if(err) throw err;
+            console.log("inserted coffee: ",name);
+            var obj ={"success" : "ok"};
+            callback(obj);
+            connection.release();
+        })
+    })
+
+}

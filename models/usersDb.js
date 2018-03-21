@@ -16,7 +16,7 @@ exports.userAdd = function(data,callback){
     var user_id = data.user_id;
     
     pool.getConnection(function(err,connection){
-        var addUserSql = "insert into user(user_id) values(?)";
+        var addUserSql = "insert into user(user_id) values( ? )";
         connection.query(addUserSql,user_id,function(err,addUser){
             if(err) throw err;
             console.log("inserted user : ",user_id);
