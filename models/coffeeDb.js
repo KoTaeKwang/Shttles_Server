@@ -4,7 +4,7 @@ var async = require('async');
 var HashMap = require('hashmap');
 
 var pool = mysql.createPool({
-    connectionLimit: 10,
+    connectionLimit: 20,
     host: 'localhost',
     user: 'root',
     password: '1234',
@@ -66,14 +66,18 @@ exports.getCoffee = function (data, callback) {
             var coffeePriceListSql = "Select price from coffee_size where coffee_id = ?"
             var objPriceList = [];
             pool.getConnection(function(err,connection){
+                connection.release();
+
                 forEach(coffeeList,function(item,index,arr){
-                var coffee_id = coffeeList[index].coffee_id;
+                
+                    var coffee_id = coffeeList[index].coffee_id;
                     connection.query(coffeePriceListSql,coffee_id,function(err,coffeePriceList){
                         var objPriceListTemp = {"price" : coffeePriceList[0].price}
                         objPriceList.push(objPriceListTemp);
                         
                         if(index==coffeeList.length-1)
                         callback(null,coffeeList,objPriceList);
+                
                     })
                 })
             })
@@ -83,8 +87,11 @@ exports.getCoffee = function (data, callback) {
             var objStateList = [];
 
             pool.getConnection(function(err,connection){
+                connection.release();
+
                 forEach(coffeeList,function(item,index,arr){
-                var coffee_id = coffeeList[index].coffee_id;
+                
+                    var coffee_id = coffeeList[index].coffee_id;
                     connection.query(coffeeStateListSql,coffee_id,function(err,coffeeStateList){
                         var objStateListTemp = {"name" : coffeeStateList[0].name}
                         objStateList.push(objStateListTemp);
@@ -97,7 +104,9 @@ exports.getCoffee = function (data, callback) {
 
         },function(coffeeList,objPriceList,objStateList,callback){
             var obj = [];
+
             forEach(coffeeList,function(item,index,arr){
+                
                 var objTemp = {
                     "coffee_id" : coffeeList[index].coffee_id,
                     "name" : coffeeList[index].name,
@@ -157,6 +166,7 @@ exports.getCoffeeDetail = function (coffee_id, callback) {
             pool.getConnection(function(err,connection){
                
                 connection.query(coffeeOptionListSql,coffee_id,function(err,coffeeOptionList){
+                    connection.release();
                     if(coffeeOptionList.length==0) callback(null,obj);
 
                     forEach(coffeeOptionList,function(item,index,arr){
