@@ -18,23 +18,36 @@ exports.userAdd = function(data,callback){
 
     pool.getConnection(function(err,connection){
         if(err) throw err;
-        var addUserSql = "insert into user(user_id) values( ? )";
 
-        connection.query(addUserSql,user_id,function(err,addUser)
-        {
+        var getTypeUser = "Select type from user where user_id = ?"
 
-            connection.release();
+        connection.query(getTypeUser,user_id,function(err,getUser){
             
-            if(err) {
-             obj={"result" : "fail"};
-             callback(obj);    
-             return;              
-            };
+            if(typeof getUser[0] != "undefined"){
 
-            console.log("inserted user : ",user_id);
-            obj ={"success" : "ok"};
-            callback(obj);
+            if(getUser[0].type == 0){
+                obj={"result" : "customer"};
+            }else{
+                obj={"result" : "owner"};
+            }
+            callback(obj);    
+            return;        
+            }
+            else{
+
+                var addUserSql = "insert into user(user_id) values( ? )";
+                connection.query(addUserSql,user_id,function(err,addUser)
+                {
+                    console.log("inserted user : ",user_id);
+                    obj ={"result" : "customer"};
+                    callback(obj);
+                })
+
+            }
+
         })
+
+      
     })
 }
 
