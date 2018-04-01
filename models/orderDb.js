@@ -294,7 +294,7 @@ exports.insertOrder = function (data, callback) {
                 })  
             });
 
-            var obj =[{"success" : "ok"}];
+            var obj =[{"result" : "success"}];
             callback(obj);
 
         }) 
