@@ -21,10 +21,10 @@ var logger = new winston.Logger({
                 level:'debug',
                 handleExceptions:true,
                 timestamp:function(){
-                    return moment().format("YYYY-MM-D HH:mm:ss");
+                    return moment().format("YYYY-MM-DD HH:mm:ss");
                 },
                 filename:logFilename,
-                datePattern:'yyyy-MM-dd',
+                datePattern:'YYYY-MM-DD',
                 json:false,
                 maxsize:1024*1024*100, //100mb
                 maxFiles:10
