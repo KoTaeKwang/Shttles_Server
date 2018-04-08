@@ -15,14 +15,16 @@ var pool = mysql.createPool({
 exports.userAdd = function(data,callback){
     console.log("user_id : ",data.user_id);
     var user_id = data.user_id;
-    var obj ;
+    var obj = [];
 
     pool.getConnection(function(err,connection){
-        if(err) throw err;
+        if(err){logger.log('error','connection error'+err); return callback(err,obj)};
 
         var getTypeUser = "Select type from user where user_id = ?"
 
         connection.query(getTypeUser,user_id,function(err,getUser){
+            if(err){logger.log('error','connection error'+err); connection.release(); return callback(err,obj);};
+
             logger.log('debug','query '+getTypeUser+'['+user_id+']');
             
             if(typeof getUser[0] != "undefined"){
@@ -39,6 +41,8 @@ exports.userAdd = function(data,callback){
                 var addUserSql = "insert into user(user_id) values( ? )";
                 connection.query(addUserSql,user_id,function(err,addUser)
                 {
+                    if(err){logger.log('error','connection error'+err); connection.release(); return callback(err,obj);};
+
                     logger.log('debug','query '+addUserSql+'['+user_id+']');
                     connection.release();
                     console.log("inserted user : ",user_id);

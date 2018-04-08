@@ -10,8 +10,11 @@ router.get('/', function(req, res, next) {
 
 router.post('/',function(req,res,next){
   logger.log('debug','post user/'+req.body.user_id);
-  db.userAdd(req.body,function(success){
-    res.json(success);
+  db.userAdd(req.body,function(err,success){
+    if(err){next(err)}
+    else{
+       res.json(success);
+    }
   })
 
 })

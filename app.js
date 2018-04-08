@@ -12,6 +12,8 @@ var food = require('./routes/food');
 var order = require('./routes/order');
 var market = require('./routes/market');
 
+var loggers = require('./winston');
+
 var app = express();
 
 // view engine setup
@@ -35,9 +37,8 @@ app.use('/market',market);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
-  var err = new Error('Not Found');
-  err.status = 404;
-  next(err);
+  loggers.log('error',req.url+' not found error');
+  res.status(404).send(req.url+' not found error');
 });
 
 // error handler
@@ -45,10 +46,9 @@ app.use(function(err, req, res, next) {
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
+  loggers.log('error','error was occured'+err.message);
+  //res.status(err.status).send('error was occured '+err.message);
+  res.json(err);
 });
 
 app.listen(3000);

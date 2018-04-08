@@ -7,8 +7,11 @@ var logger = require('../winston');
 // show orderList
 router.get('/:user_id',function(req,res,next){
   logger.log('debug','get /order/'+req.params.user_id);
-  db.getOrderList(req.params.user_id,function(success){
-    res.json(success);  
+  db.getOrderList(req.params.user_id,function(err,success){
+    if(err){next(err)}
+    else{
+       res.json(success);
+    }
   })
   });
 
@@ -16,8 +19,11 @@ router.get('/:user_id',function(req,res,next){
 // show orderdetail
 router.get('/detail/:order_id',function(req,res,next){
   logger.log('debug','get /order/'+req.params.order_id);
-  db.getOrderDetail(req.params.order_id,function(success){
-    res.json(success);  
+  db.getOrderDetail(req.params.order_id,function(err,success){
+    if(err){next(err)}
+    else{
+       res.json(success);
+    }
   })
   });
 
@@ -25,8 +31,11 @@ router.get('/detail/:order_id',function(req,res,next){
   // insert order
 router.post('/',function(req,res,next){
   logger.log('debug','post /order');
-  db.insertOrder(req.body,function(success){
-    res.json(success);
+  db.insertOrder(req.body,function(err,success){
+    if(err){next(err)}
+    else{
+       res.json(success);
+    }
   })
 });
 

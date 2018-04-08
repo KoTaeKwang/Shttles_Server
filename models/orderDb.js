@@ -171,12 +171,12 @@ exports.insertOrder = function (data, callback) {
 
     pool.getConnection(function(err,connection){
         if(err) throw err; 
-
+        var obj =[];
         async.waterfall([
             function(callback){
                 
                 connection.beginTransaction(function(err){ //orders insert
-                    if(err) throw err;
+                    if(err){return callback(err,obj)};
         
                     var addOrdersSql = "insert into orders(state,address,price,user_id) values(?,?,?,?)";
                 
@@ -189,7 +189,8 @@ exports.insertOrder = function (data, callback) {
                     var query = connection.query(addOrdersSql,orders,function(err,results){
                        console.log(query.sql);
                         if(err){return connection.rollback(function(){
-                            throw err;
+                            connection.release();
+                            return callback(err,obj);
                         })
                     }
                     order_id = results.insertId;
@@ -211,7 +212,8 @@ exports.insertOrder = function (data, callback) {
                     var query = connection.query(insertCoffeeOrdersSql,coffee_orders,function(err,results){
                         console.log(query.sql);
                         if(err){return connection.rollback(function(){
-                            throw err;
+                            connection.release();
+                            return callback(err,obj);
                         })
                      } 
                    
@@ -229,7 +231,8 @@ exports.insertOrder = function (data, callback) {
                         var query = connection.query(insertCoffeeOptionSql,coffee_options,function(err,results){
                             console.log(query.sql);
                             if(err){return connection.rollback(function(){
-                                throw err;
+                                connection.release();
+                                return callback(err,obj);
                             })
                          } 
 
@@ -258,7 +261,8 @@ exports.insertOrder = function (data, callback) {
                     var query = connection.query(insertFoodOrdersSql,food_orders,function(err,results){
                         console.log(query.sql);
                         if(err){return connection.rollback(function(){
-                            throw err;
+                            tconnection.release();
+                            return callback(err,obj);
                         })
                      } 
                   
@@ -273,7 +277,8 @@ exports.insertOrder = function (data, callback) {
                         var query = connection.query(insertFoodOptionSql,food_options,function(err,results){
                             console.log(query.sql);
                             if(err){return connection.rollback(function(){
-                                throw err;
+                                connection.release();
+                            return callback(err,obj);
                             })
                          } 
 
@@ -291,7 +296,8 @@ exports.insertOrder = function (data, callback) {
             connection.commit(function(err){
               if(err)
                 return connection.rollback(function(){
-                    throw err;
+                    connection.release();
+                    return callback(err,obj);
                 })  
             });
 

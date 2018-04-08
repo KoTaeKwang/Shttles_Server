@@ -26,13 +26,17 @@ exports.test = function (data, callback) {
 
 
 exports.getCoffee = function (data, callback) {
-    
+    var obj = [];
     async.waterfall([
         function(callback){
             var coffeeListSql = "Select coffee_id,name,picture_url,description,picture_version from coffee"
             pool.getConnection(function(err,connection){
+                if(err){return callback(err,obj)};
+
                 connection.query(coffeeListSql,function(err,coffeeList){
                     connection.release();
+                    if(err){return callback(err,obj)};
+
                     logger.log('debug','query '+coffeeListSql);
                     callback(null,coffeeList);
                 })
@@ -43,6 +47,8 @@ exports.getCoffee = function (data, callback) {
             var objPriceList = [];
             pool.getConnection(function(err,connection){
                 connection.release();
+                if(err){return callback(err,obj)};
+             
                 logger.log('debug','query '+coffeePriceListSql);
                 forEach(coffeeList,function(item,index,arr){
                 
@@ -64,6 +70,8 @@ exports.getCoffee = function (data, callback) {
 
             pool.getConnection(function(err,connection){
                 connection.release();
+                if(err){return callback(err,obj)};
+               
                 logger.log('debug','query '+coffeeStateListSql);
                 forEach(coffeeList,function(item,index,arr){
                 
@@ -115,8 +123,10 @@ exports.getCoffeeDetail = function (coffee_id, callback) {
         function(callback){
             var coffeeOptionListSql = "Select option_id,name,price from coffee_option where coffee_id = ?"
             pool.getConnection(function(err,connection){
-               
+               if(err){return callback(err,obj)};
                 connection.query(coffeeOptionListSql,coffee_id,function(err,coffeeOptionList){
+                    if(err){return callback(err,obj)};
+
                     connection.release();
                     logger.log('debug','query '+coffeeOptionListSql+'['+coffee_id+']');
                     if(coffeeOptionList.length==0) return callback(null,emptyResult);
@@ -152,6 +162,8 @@ exports.getCoffeeTodayMenu = function(data,callback){
             
             connection.query(coffeeTodayMenuSql,function(err,coffeeTodayMenu){
                 connection.release();
+                if(err){return callback(err,obj)};
+
                 logger.log('debug','query '+coffeeTodayMenuSql);
                 callback(null,coffeeTodayMenu);
             })
@@ -190,6 +202,7 @@ exports.getCoffeeCombiMenu = function(data,callback){
               connection.query(coffeeCombiMenuSql,function(err,coffeeCombiMenu){
                 logger.log('debug','query '+coffeeCombiMenuSql);
                 connection.release();
+                if(err){return callback(err,obj)};
                 callback(null,coffeeCombiMenu);
               })
           })
@@ -229,8 +242,9 @@ exports.getCoffeeMyMenu = function(user_id,callback){
                 var myMenuSql = "Select coffee_id from myDrinkMenu where user_id = ?";
 
                 connection.query(myMenuSql,user_id,function(err,myMenu){
-                    logger.log('debug','query '+myMenuSql+'['+user_id+']');
                     connection.release();
+                    if(err){return callback(err,obj)};
+                    logger.log('debug','query '+myMenuSql+'['+user_id+']');
                     callback(null,myMenu);
                 })
             })
@@ -239,12 +253,14 @@ exports.getCoffeeMyMenu = function(user_id,callback){
             if(myMenu.length==0) return callback(null,emptyResult);
 
             pool.getConnection(function(err,connection){
+                if(err){return callback(err,obj)};
                 var coffeeListSql = "Select coffee_id, name, picture_url, picture_version, description from coffee where coffee_id = ?";
                 logger.log('debug','query '+coffeeListSql);
                 forEach(myMenu,function(item,index,arr){
 
                     connection.query(coffeeListSql,myMenu[index].coffee_id,function(err,coffeeList){
                         connection.release();
+                        if(err){return callback(err,obj)};
                         console.log("coffeeList : ",coffeeList);
                       
                         var objTemp = {
