@@ -2,6 +2,7 @@ var mysql = require('mysql');
 var forEach = require('async-foreach').forEach;
 var async = require('async');
 var HashMap = require('hashmap');
+var logger = require('../winston');
 
 var pool = mysql.createPool({
     connectionLimit: 20,
@@ -11,6 +12,7 @@ var pool = mysql.createPool({
     database: 'shuttlesDB'
 });
 
+var emptyResult = [{"result":"empty"}]
 
 exports.test = function (data, callback) {
     pool.getConnection(function (err, connection) {
@@ -24,40 +26,14 @@ exports.test = function (data, callback) {
 
 
 exports.getCoffee = function (data, callback) {
-    var test= false;
-    if(test){
-        var obj = [
-            {
-            "coffee_id": 1,
-            "name": "아메리카노",
-            "picture_url": "https://s3.ap-northeast-2.amazonaws.com/shuttles/coffee/jimin.png",
-            "picture_version": "V1",
-            "description": null,
-            "price": 3500,
-            "state": "coffee"
-            },
-            {
-            "coffee_id": 2,
-            "name": "라떼",
-            "picture_url": "https://s3.ap-northeast-2.amazonaws.com/shuttles/coffee/jimin.png",
-            "picture_version": "V1",
-            "description": null,
-            "price": 4000,
-            "state": "lattee"
-            }
-            ]
-         callback(obj);   
-         return; 
-    }
     
-
-
     async.waterfall([
         function(callback){
             var coffeeListSql = "Select coffee_id,name,picture_url,description,picture_version from coffee"
             pool.getConnection(function(err,connection){
                 connection.query(coffeeListSql,function(err,coffeeList){
                     connection.release();
+                    logger.log('debug','query '+coffeeListSql);
                     callback(null,coffeeList);
                 })
             })
@@ -67,7 +43,7 @@ exports.getCoffee = function (data, callback) {
             var objPriceList = [];
             pool.getConnection(function(err,connection){
                 connection.release();
-
+                logger.log('debug','query '+coffeePriceListSql);
                 forEach(coffeeList,function(item,index,arr){
                 
                     var coffee_id = coffeeList[index].coffee_id;
@@ -88,7 +64,7 @@ exports.getCoffee = function (data, callback) {
 
             pool.getConnection(function(err,connection){
                 connection.release();
-
+                logger.log('debug','query '+coffeeStateListSql);
                 forEach(coffeeList,function(item,index,arr){
                 
                     var coffee_id = coffeeList[index].coffee_id;
@@ -133,32 +109,7 @@ exports.getCoffee = function (data, callback) {
 
 
 exports.getCoffeeDetail = function (coffee_id, callback) {
-    
-    var test= false;
-    if(test){
-        var obj = [
-            {
-            "option_id": 1,
-            "option_name": "과라나추가",
-            "option_price": 500
-            },
-            {
-            "option_id": 2,
-            "option_name": "ice",
-            "option_price": 500
-            },
-            {
-            "option_id": 3,
-            "option_name": "hot",
-            "option_price": 500
-            }
-            ]
-         callback(obj);  
-         return; 
-    }
-    
-    
-    
+
     var obj = [];
     async.waterfall([
         function(callback){
@@ -167,8 +118,9 @@ exports.getCoffeeDetail = function (coffee_id, callback) {
                
                 connection.query(coffeeOptionListSql,coffee_id,function(err,coffeeOptionList){
                     connection.release();
-                    if(coffeeOptionList.length==0) callback(null,obj);
-
+                    logger.log('debug','query '+coffeeOptionListSql+'['+coffee_id+']');
+                    if(coffeeOptionList.length==0) return callback(null,emptyResult);
+                   
                     forEach(coffeeOptionList,function(item,index,arr){
                         var objTemp = {
                             "option_id" : coffeeOptionList[index].option_id,
@@ -191,24 +143,7 @@ exports.getCoffeeDetail = function (coffee_id, callback) {
 
 
 exports.getCoffeeTodayMenu = function(data,callback){
- 
-    var test= false;
-    if(test){
-        var obj = [
-            {
-            "coffee_id": 1,
-            "name": "아메리카노",
-            "price": 3000,
-            "picture_url": "https://s3.ap-northeast-2.amazonaws.com/shuttles/coffee/jimin.png",
-            "version": "V1",
-            "description": null
-            }
-            ]
-         callback(obj);   
-         return; 
-    }
- 
- 
+
     var obj =[];
   async.waterfall([
     function(callback){
@@ -216,11 +151,13 @@ exports.getCoffeeTodayMenu = function(data,callback){
             var coffeeTodayMenuSql = "SELECT t.coffee_id, t.price, c.name,c.picture_url,c.picture_version,c.description from todayDrinkMenu AS t JOIN coffee AS c ON t.coffee_id = c.coffee_id";
             
             connection.query(coffeeTodayMenuSql,function(err,coffeeTodayMenu){
+                connection.release();
+                logger.log('debug','query '+coffeeTodayMenuSql);
                 callback(null,coffeeTodayMenu);
             })
         })
     },function(coffeeTodayMenu,callback){
-        if(coffeeTodayMenu.length==0) callback(null,obj)
+        if(coffeeTodayMenu.length==0) return callback(null,emptyResult)
    
         forEach(coffeeTodayMenu,function(item,index,arr){
             var objTemp = {
@@ -244,22 +181,6 @@ exports.getCoffeeTodayMenu = function(data,callback){
 
 exports.getCoffeeCombiMenu = function(data,callback){
     
-    var test= true;
-    if(test){
-        var obj = [
-            {
-            "coffee_id": 2,
-            "name": "라떼",
-            "price": 4000,
-            "picture_url": "https://s3.ap-northeast-2.amazonaws.com/shuttles/coffee/jimin.png",
-            "version": "V1",
-            "description": null
-            }
-            ]
-         callback(obj);   
-         return; 
-    }
-    
     var obj =[];
     async.waterfall([
       function(callback){
@@ -267,11 +188,13 @@ exports.getCoffeeCombiMenu = function(data,callback){
               var coffeeCombiMenuSql = "SELECT t.coffee_id, t.price, c.name,c.picture_url,c.picture_version,c.description from combiDrinkMenu AS t JOIN coffee AS c ON t.coffee_id = c.coffee_id";
               
               connection.query(coffeeCombiMenuSql,function(err,coffeeCombiMenu){
-                  callback(null,coffeeCombiMenu);
+                logger.log('debug','query '+coffeeCombiMenuSql);
+                connection.release();
+                callback(null,coffeeCombiMenu);
               })
           })
       },function(coffeeCombiMenu,callback){
-          if(coffeeCombiMenu.length==0) callback(null,obj);
+          if(coffeeCombiMenu.length==0) return callback(null,emptyResult);
           forEach(coffeeCombiMenu,function(item,index,arr){
               var objTemp = {
                   "coffee_id" : coffeeCombiMenu[index].coffee_id,
@@ -298,30 +221,7 @@ exports.getCoffeeCombiMenu = function(data,callback){
 
 exports.getCoffeeMyMenu = function(user_id,callback){
     
-    var test= true;
-    if(test){
-        var obj = [
-            {
-            "coffee_id": 2,
-            "name": "라떼",
-            "picture_url": "https://s3.ap-northeast-2.amazonaws.com/shuttles/coffee/jimin.png",
-            "version": "V1",
-            "description": null
-            },
-            {
-            "coffee_id": 1,
-            "name": "아메리카노",
-            "picture_url": "https://s3.ap-northeast-2.amazonaws.com/shuttles/coffee/jimin.png",
-            "version": "V1",
-            "description": null
-            }
-            ]
-         callback(obj);   
-         return; 
-    }
-    
-    
-    console.log("user_id : ",user_id)
+
    var obj =[];
     async.waterfall([
         function(callback){
@@ -329,19 +229,22 @@ exports.getCoffeeMyMenu = function(user_id,callback){
                 var myMenuSql = "Select coffee_id from myDrinkMenu where user_id = ?";
 
                 connection.query(myMenuSql,user_id,function(err,myMenu){
+                    logger.log('debug','query '+myMenuSql+'['+user_id+']');
+                    connection.release();
                     callback(null,myMenu);
                 })
             })
         },function(myMenu,callback){
 
-            if(myMenu.length==0) callback(null,obj);
+            if(myMenu.length==0) return callback(null,emptyResult);
 
             pool.getConnection(function(err,connection){
                 var coffeeListSql = "Select coffee_id, name, picture_url, picture_version, description from coffee where coffee_id = ?";
-                
+                logger.log('debug','query '+coffeeListSql);
                 forEach(myMenu,function(item,index,arr){
 
                     connection.query(coffeeListSql,myMenu[index].coffee_id,function(err,coffeeList){
+                        connection.release();
                         console.log("coffeeList : ",coffeeList);
                       
                         var objTemp = {

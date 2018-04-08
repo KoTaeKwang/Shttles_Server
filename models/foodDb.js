@@ -2,6 +2,7 @@ var mysql = require('mysql');
 var forEach = require('async-foreach').forEach;
 var async = require('async');
 var HashMap = require('hashmap');
+var logger = require('../winston');
 
 var pool = mysql.createPool({
     connectionLimit: 10,
@@ -10,6 +11,8 @@ var pool = mysql.createPool({
     password: '1234',
     database: 'shuttlesDB'
 });
+
+var emptyResult = [{"result":"empty"}]
 
 exports.insertFood = function(data,callback){
     var name = data.name;
@@ -36,31 +39,7 @@ exports.insertFood = function(data,callback){
 
 exports.getFoodList = function(market_name,callback){
   
-    var test= true;
-    if(test){
-        var obj = [
-            {
-            "food_id": 3,
-            "name": "불고기버거",
-            "price": 3000,
-            "picture_url": "https://s3.ap-northeast-2.amazonaws.com/shuttles/coffee/jimin.png",
-            "description": null
-            },
-            {
-            "food_id": 4,
-            "name": "새우버거",
-            "price": 3000,
-            "picture_url": "https://s3.ap-northeast-2.amazonaws.com/shuttles/coffee/jimin.png",
-            "description": null
-            }
-            ]
-         callback(obj);  
-         return;  
-    }
-  
-  
-  
-  
+ 
     console.log("market_name : ",market_name);
     var obj = [];
     var foodListSql = "Select food_id,name,price,picture_url,description from food where market_name = ?";
@@ -75,7 +54,7 @@ exports.getFoodList = function(market_name,callback){
             })
         },function(foodList,callback){
 
-            if(foodList == null | foodList.length==0) callback(null,obj);
+            if(foodList == null | foodList.length==0) return callback(null,emptyResult);
 
             forEach(foodList,function(item,index,arr){
                 var objTemp = {
@@ -100,25 +79,7 @@ exports.getFoodList = function(market_name,callback){
 
 exports.getFoodOption = function(food_id,callback){
    
-    var test= true;
-    if(test){
-        var obj = [
-            {
-            "option_id": 1,
-            "option_name": "콜라",
-            "option_price": 200
-            },
-            {
-            "option_id": 2,
-            "option_name": "사이다",
-            "option_price": 300
-            }
-            ]
-         callback(obj); 
-         return;   
-    }
-  
-   
+
     console.log("food_id : ",food_id);
     var obj = [];
     var foodOptionSql = "Select option_id,name,price from food_option where food_id = ?"
@@ -133,7 +94,7 @@ exports.getFoodOption = function(food_id,callback){
 
             })
         },function(foodOption,callback){
-            if(foodOption.length==0) callback(null,obj);
+            if(foodOption.length==0) return callback(null,emptyResult);
             forEach(foodOption,function(item,index,arr){
                 var objTemp = {
                     "option_id" : foodOption[index].option_id,

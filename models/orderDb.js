@@ -2,6 +2,7 @@ var mysql = require('mysql');
 var forEach = require('async-foreach').forEach;
 var async = require('async');
 var HashMap = require('hashmap');
+var logger = require('../winston');
 
 var pool = mysql.createPool({
     connectionLimit: 10,
@@ -10,6 +11,8 @@ var pool = mysql.createPool({
     password: '1234',
     database: 'shuttlesDB'
 });
+
+var emptyResult = [{"result":"empty"}]
 
 exports.getOrderList = function(user_id,callback){
 
@@ -32,9 +35,7 @@ exports.getOrderList = function(user_id,callback){
              var coffeeTemp=[];
             
              if(coffeeList.length==0){
-                 var obj ={"result":"empty"};
-                 callback(null,obj);
-                 return;
+                 return callback(null,emptyResult);
              }
 
             forEach(coffeeList,function(item,index,arr){

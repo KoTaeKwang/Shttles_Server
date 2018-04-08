@@ -2,6 +2,7 @@ var mysql = require('mysql');
 var forEach = require('async-foreach').forEach;
 var async = require('async');
 var HashMap = require('hashmap');
+var logger = require('../winston');
 
 var pool = mysql.createPool({
     connectionLimit: 10,
@@ -22,25 +23,27 @@ exports.userAdd = function(data,callback){
         var getTypeUser = "Select type from user where user_id = ?"
 
         connection.query(getTypeUser,user_id,function(err,getUser){
+            logger.log('debug','query '+getTypeUser+'['+user_id+']');
             
             if(typeof getUser[0] != "undefined"){
-
             if(getUser[0].type == 0){
+            
                 obj={"result" : "customer"};
             }else{
                 obj={"result" : "owner"};
             }
-            callback(obj);    
-            return;        
+            connection.release();
+            return callback(obj);          
             }
             else{
-
                 var addUserSql = "insert into user(user_id) values( ? )";
                 connection.query(addUserSql,user_id,function(err,addUser)
                 {
+                    logger.log('debug','query '+addUserSql+'['+user_id+']');
+                    connection.release();
                     console.log("inserted user : ",user_id);
                     obj ={"result" : "customer"};
-                    callback(obj);
+                    return callback(obj);
                 })
 
             }
