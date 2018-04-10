@@ -37,18 +37,20 @@ app.use('/market',market);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
+  var obj = {"status":"404", "reason":req.url+" not found error"}
   loggers.log('error',req.url+' not found error');
-  res.status(404).send(req.url+' not found error');
+  res.status(404).json(obj);
 });
 
 // error handler
 app.use(function(err, req, res, next) {
   // set locals, only providing error in development
+  var obj = {"status":"500", "reason":"error : "+err.message}
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
   loggers.log('error','error was occured'+err.message);
   //res.status(err.status).send('error was occured '+err.message);
-  res.json(err);
+  res.status(500).json(obj);
 });
 
 app.listen(3000);

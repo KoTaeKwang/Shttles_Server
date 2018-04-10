@@ -34,8 +34,9 @@ exports.userAdd = function(data,callback){
             }else{
                 obj={"result" : "owner"};
             }
+            logger.log('debug','/user response : %j',obj);
             connection.release();
-            return callback(obj);          
+            return callback(null,obj);          
             }
             else{
                 var addUserSql = "insert into user(user_id) values( ? )";
@@ -47,7 +48,8 @@ exports.userAdd = function(data,callback){
                     connection.release();
                     console.log("inserted user : ",user_id);
                     obj ={"result" : "customer"};
-                    return callback(obj);
+                    logger.log('debug','/user response : %j'+obj);
+                    return callback(null,obj);
                 })
 
             }

@@ -48,7 +48,7 @@ router.get('/detail/:coffee_id', function(req, res, next) {
   });
 
   router.get('/myMenu/:user_id', function(req, res, next) {
-    logger.log('debug','get /drink/myMenu'+req.params.user_id);
+    logger.log('debug','get /drink/myMenu/'+req.params.user_id);
     db.getCoffeeMyMenu(req.params.user_id,function(err,success){
         if(err){next(err)}
         else{

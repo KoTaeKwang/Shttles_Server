@@ -110,7 +110,7 @@ exports.getCoffee = function (data, callback) {
 
         }
     ],function(err,results){
-        callback(results);
+        callback(null,results);
     })
 
 };
@@ -147,7 +147,8 @@ exports.getCoffeeDetail = function (coffee_id, callback) {
             })
         }
     ],function(err,results){
-        callback(results);
+        logger.log('debug','/drink/detail response : %j'+results);
+        callback(null,results);
     })
 };
 
@@ -187,7 +188,8 @@ exports.getCoffeeTodayMenu = function(data,callback){
         })
     }
   ],function(err,results){
-    callback(results);
+    logger.log('debug','/drink/todayMenu response : %j'+results);
+    callback(null,results);
   })
 };
 
@@ -224,7 +226,8 @@ exports.getCoffeeCombiMenu = function(data,callback){
           })
       }
     ],function(err,results){
-      callback(results);
+        logger.log('debug','/drink/combiMenu response : %j'+results);
+      callback(null,results);
     })
 
   };
@@ -255,11 +258,12 @@ exports.getCoffeeMyMenu = function(user_id,callback){
             pool.getConnection(function(err,connection){
                 if(err){return callback(err,obj)};
                 var coffeeListSql = "Select coffee_id, name, picture_url, picture_version, description from coffee where coffee_id = ?";
-                logger.log('debug','query '+coffeeListSql);
+                
                 forEach(myMenu,function(item,index,arr){
 
                     connection.query(coffeeListSql,myMenu[index].coffee_id,function(err,coffeeList){
-                        connection.release();
+                        logger.log('debug','query '+coffeeListSql+" "+myMenu[index].coffee_id);
+                        
                         if(err){return callback(err,obj)};
                         console.log("coffeeList : ",coffeeList);
                       
@@ -273,14 +277,17 @@ exports.getCoffeeMyMenu = function(user_id,callback){
                       
                         obj.push(objTemp);
 
-                     if(index==myMenu.length-1)
+                     if(index==myMenu.length-1){
+                        connection.release();
                         callback(null,obj);   
+                      }
                     })
                 })
             })
         }
     ],function(err,results){
-        callback(results);
+        logger.log('debug','/drink/myMenu response : %j'+results);
+        callback(null,results);
     })
 };
 
@@ -298,7 +305,7 @@ exports.insertCoffee = function(data,callback){
             if(err) throw err;
             console.log("inserted coffee: ",name);
             var obj ={"success" : "ok"};
-            callback(obj);
+            callback(null,obj);
         })
     })
 
