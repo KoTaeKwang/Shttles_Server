@@ -8,7 +8,7 @@ var pool = mysql.createPool({
     connectionLimit: 20,
     host: 'localhost',
     user: 'root',
-    password: '1234',
+    password: '#@tiqrhf#@',
     database: 'shuttlesDB'
 });
 
