@@ -1,15 +1,9 @@
-var mysql = require('mysql');
+
 var forEach = require('async-foreach').forEach;
 var async = require('async');
 var HashMap = require('hashmap');
+var pool = require('../mysql');
 
-var pool = mysql.createPool({
-    connectionLimit: 10,
-    host: 'localhost',
-    user: 'root',
-    password: '1234',
-    database: 'shuttlesDB'
-});
 exports.insertMarket = function(data,callback){
     var name = data.market_name;
     console.log("name : ",name);
