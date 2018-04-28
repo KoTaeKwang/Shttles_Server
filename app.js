@@ -48,7 +48,7 @@ app.use(function(err, req, res, next) {
   var obj = {"status":"500", "reason":"error : "+err.message}
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
-  loggers.log('error','error was occured'+err.message);
+  loggers.log('error','error was occured : '+err.message);
   //res.status(err.status).send('error was occured '+err.message);
   res.status(500).json(obj);
 });

@@ -4,6 +4,7 @@ var async = require('async');
 var HashMap = require('hashmap');
 var logger = require('../winston');
 var pool = require('../mysql');
+var Promise = require('promise');
 
 
 var emptyResult = [{"result":"empty"}]
@@ -19,153 +20,198 @@ exports.test = function (data, callback) {
 };
 
 
-exports.getCoffee = function (data, callback) {
-    var obj = [];
-    async.waterfall([
-        function(callback){
-            var coffeeListSql = "Select coffee_id,name,picture_url,description,picture_version from coffee"
-            pool.getConnection(function(err,connection){
-                if(err){return callback(err,obj)};
+exports.getCoffee =  async function (data, callback) {
 
-                connection.query(coffeeListSql,function(err,coffeeList){
-                    connection.release();
-                    if(err){return callback(err,obj)};
+    try{
+        const getCoffeeListPromise = await getCoffeeList();
+        const responseCoffeeListPromise = await responseCoffeeList(getCoffeeListPromise);
+        callback(null,responseCoffeeListPromise);
+    }catch(e){
+        callback(e,null);
+    }
 
-                    logger.log('debug','query '+coffeeListSql);
-                    callback(null,coffeeList);
-                })
-            })
+};
 
-        },function(coffeeList,callback){
-            var coffeePriceListSql = "Select price from coffee_size where coffee_id = ?"
-            var objPriceList = [];
-            pool.getConnection(function(err,connection){
+
+exports.getCoffeeDetail = async function (coffee_id, callback) {
+
+    try{
+        const getCoffeeDetailPromise = await getCoffeeOption(coffee_id);
+        logger.log('debug','/drink/detail response : %j'+getCoffeeDetailPromise);
+        callback(null,getCoffeeDetailPromise);
+    }catch(e){
+        callback(e,null);
+    }
+};
+
+
+exports.getCoffeeTodayMenu = async function(data,callback){
+
+    try{
+        const getCoffeeTodayMenuPromise = await getCoffeeTodayMenu();
+        const responseCoffeeTodayMenuPromise = await responseCoffeeTodayMenu(getCoffeeTodayMenuPromise);
+        logger.log('debug','/drink/todayMenu response : %j'+responseCoffeeTodayMenuPromise);
+        callback(null,responseCoffeeTodayMenuPromise);
+
+    }catch(e){
+        callback(e,null);
+    }
+};
+
+exports.getCoffeeCombiMenu = async function(data,callback){
+
+    try{
+        const getCoffeeCombiMenuPromise = await getCoffeeCombiMenu();
+        const responseCoffeeCombiMenuPromise = await responseCoffeeTodayMenu(getCoffeeCombiMenuPromise);
+        logger.log('debug','/drink/combiMenu response : %j'+responseCoffeeCombiMenuPromise);
+        callback(null,responseCoffeeCombiMenuPromise);
+
+    }catch(e){
+        callback(e,null);
+    }
+};
+
+exports.getCoffeeMyMenu = async function(user_id,callback){
+
+    try{
+        const getCoffeeIdsPromise = await getCoffeeIdsbyUserID(user_id);
+        const responseCoffeeMyMenuPromise = await getCoffeeDetailbyCoffeeIds(getCoffeeIdsPromise);
+        logger.log('debug','/drink/myMenu response : %j'+responseCoffeeMyMenuPromise);
+        callback(null,responseCoffeeMyMenuPromise);
+
+    }catch(e){
+        callback(e,null);
+    }
+};
+
+async function getCoffeeList() {
+
+    return new Promise(function(resolve,reject){
+
+        var obj = [];
+        var coffeeListSql = "select coffee.coffee_id, coffee.name, coffee.picture_url, coffee.description, coffee.picture_version, coffee_size.price , coffee_state.name as state\n" +
+            " from coffee as coffee  inner join coffee_size as coffee_size on coffee.coffee_id = coffee_size.coffee_id inner join coffee_state as coffee_state on coffee.coffee_id = coffee_state.coffee_id;"
+        pool.getConnection(function (err, connection) {
+            if (err) {
+                return reject(err)
+            }
+            ;
+
+            connection.query(coffeeListSql, function (err, coffeeList) {
                 connection.release();
-                if(err){return callback(err,obj)};
-             
-                logger.log('debug','query '+coffeePriceListSql);
-                forEach(coffeeList,function(item,index,arr){
-                
-                    var coffee_id = coffeeList[index].coffee_id;
-                    connection.query(coffeePriceListSql,coffee_id,function(err,coffeePriceList){
-                        var objPriceListTemp = {"price" : coffeePriceList[0].price}
-                        objPriceList.push(objPriceListTemp);
-                        
-                        if(index==coffeeList.length-1)
-                        callback(null,coffeeList,objPriceList);
-                
-                    })
-                })
-            })
-
-        },function(coffeeList,objPriceList,callback){
-            var coffeeStateListSql = "Select name from coffee_state where coffee_id = ?"
-            var objStateList = [];
-
-            pool.getConnection(function(err,connection){
-                connection.release();
-                if(err){return callback(err,obj)};
-               
-                logger.log('debug','query '+coffeeStateListSql);
-                forEach(coffeeList,function(item,index,arr){
-                
-                    var coffee_id = coffeeList[index].coffee_id;
-                    connection.query(coffeeStateListSql,coffee_id,function(err,coffeeStateList){
-                        var objStateListTemp = {"name" : coffeeStateList[0].name}
-                        objStateList.push(objStateListTemp);
-                        
-                        if(index==coffeeList.length-1)
-                        callback(null,coffeeList,objPriceList,objStateList);
-                    })
-                })
-            })
-
-        },function(coffeeList,objPriceList,objStateList,callback){
-            var obj = [];
-
-            forEach(coffeeList,function(item,index,arr){
-                
-                var objTemp = {
-                    "coffee_id" : coffeeList[index].coffee_id,
-                    "name" : coffeeList[index].name,
-                    "picture_url" : coffeeList[index].picture_url,
-                    "picture_version" : coffeeList[index].picture_version,
-                    "description" : coffeeList[index].description,
-                    "price" : objPriceList[index].price,
-                    "state" : objStateList[index].name
+                if (err) {
+                    return reject(err)
                 }
+                ;
 
-                obj.push(objTemp);
-
-             
-                if(index==coffeeList.length-1)
-                    callback(null,obj);
-            })
-
-        }
-    ],function(err,results){
-        callback(null,results);
-    })
-
-};
-
-
-exports.getCoffeeDetail = function (coffee_id, callback) {
-
-    var obj = [];
-    async.waterfall([
-        function(callback){
-            var coffeeOptionListSql = "Select option_id,name,price from coffee_option where coffee_id = ?"
-            pool.getConnection(function(err,connection){
-               if(err){return callback(err,obj)};
-                connection.query(coffeeOptionListSql,coffee_id,function(err,coffeeOptionList){
-                    if(err){return callback(err,obj)};
-
-                    connection.release();
-                    logger.log('debug','query '+coffeeOptionListSql+'['+coffee_id+']');
-                    if(coffeeOptionList.length==0) return callback(null,emptyResult);
-                   
-                    forEach(coffeeOptionList,function(item,index,arr){
-                        var objTemp = {
-                            "option_id" : coffeeOptionList[index].option_id,
-                            "option_name" : coffeeOptionList[index].name,
-                            "option_price" : coffeeOptionList[index].price,
-                        }
-                        obj.push(objTemp);
-
-                        if(index == coffeeOptionList.length-1)
-                            callback(null,obj);
-                        
-                    })
-                })                
-            })
-        }
-    ],function(err,results){
-        logger.log('debug','/drink/detail response : %j'+results);
-        callback(null,results);
-    })
-};
-
-
-exports.getCoffeeTodayMenu = function(data,callback){
-
-    var obj =[];
-  async.waterfall([
-    function(callback){
-        pool.getConnection(function(err,connection){
-            var coffeeTodayMenuSql = "SELECT t.coffee_id, t.price, c.name,c.picture_url,c.picture_version,c.description from todayDrinkMenu AS t JOIN coffee AS c ON t.coffee_id = c.coffee_id";
-            
-            connection.query(coffeeTodayMenuSql,function(err,coffeeTodayMenu){
-                connection.release();
-                if(err){return callback(err,obj)};
-
-                logger.log('debug','query '+coffeeTodayMenuSql);
-                callback(null,coffeeTodayMenu);
+                logger.log('debug', 'query ' + coffeeListSql);
+                console.log("coffeelist",coffeeList);
+                resolve(coffeeList);
             })
         })
-    },function(coffeeTodayMenu,callback){
-        if(coffeeTodayMenu.length==0) return callback(null,emptyResult)
-   
+
+
+    })
+
+
+}
+
+async function responseCoffeeList(coffeeList){
+
+    return new Promise(function(resolve, reject){
+
+        var obj = [];
+        console.log("response",coffeeList)
+        forEach(coffeeList,function(item,index,arr){
+
+            var objTemp = {
+                "coffee_id" : coffeeList[index].coffee_id,
+                "name" : coffeeList[index].name,
+                "picture_url" : coffeeList[index].picture_url,
+                "picture_version" : coffeeList[index].picture_version,
+                "description" : coffeeList[index].description,
+                "price" : coffeeList[index].price,
+                "state" : coffeeList[index].state
+            }
+
+            obj.push(objTemp);
+
+
+            if(index==coffeeList.length-1)
+                resolve(obj);
+        })
+
+    })
+
+
+};
+
+async function getCoffeeOption(coffee_id){
+
+    return new Promise(function(resolve,reject){
+
+        var obj =[];
+
+        var coffeeOptionListSql = "Select option_id,name,price from coffee_option where coffee_id = ?"
+
+        pool.getConnection(function(err,connection){
+            if(err){return reject(err)};
+
+            connection.query(coffeeOptionListSql,coffee_id,function(err,coffeeOptionList){
+                if(err){return reject(err)};
+                connection.release();
+
+                logger.log('debug','query '+coffeeOptionListSql+'['+coffee_id+']');
+
+                if(coffeeOptionList.length==0) return callback(null,emptyResult);
+
+                forEach(coffeeOptionList,function(item,index,arr){
+                    var objTemp = {
+                        "option_id" : coffeeOptionList[index].option_id,
+                        "option_name" : coffeeOptionList[index].name,
+                        "option_price" : coffeeOptionList[index].price,
+                    }
+                    obj.push(objTemp);
+
+                    if(index == coffeeOptionList.length-1)
+                        resolve(obj);
+
+                })
+            })
+        })
+
+    })
+
+
+}
+
+async function getCoffeeTodayMenu(){
+
+    return new Promise(function(resolve,reject){
+
+        pool.getConnection(function(err,connection){
+            var coffeeTodayMenuSql = "SELECT t.coffee_id, t.price, c.name,c.picture_url,c.picture_version,c.description from todayDrinkMenu AS t JOIN coffee AS c ON t.coffee_id = c.coffee_id";
+
+            connection.query(coffeeTodayMenuSql,function(err,coffeeTodayMenu){
+                connection.release();
+                if(err){return reject(err)};
+
+                logger.log('debug','query '+coffeeTodayMenuSql);
+                resolve(coffeeTodayMenu);
+            })
+        })
+
+    })
+}
+
+async function responseCoffeeTodayMenu(coffeeTodayMenu){
+
+    var obj =[];
+
+    return new Promise(function(resolve,reject){
+
+        if(coffeeTodayMenu.length==0) {return resolve(emptyResult)}
+
         forEach(coffeeTodayMenu,function(item,index,arr){
             var objTemp = {
                 "coffee_id" : coffeeTodayMenu[index].coffee_id,
@@ -178,113 +224,84 @@ exports.getCoffeeTodayMenu = function(data,callback){
             obj.push(objTemp);
 
             if(index== coffeeTodayMenu.length-1)
-                callback(null,obj);
+                resolve(obj);
         })
-    }
-  ],function(err,results){
-    logger.log('debug','/drink/todayMenu response : %j'+results);
-    callback(null,results);
-  })
-};
+    })
+}
 
-exports.getCoffeeCombiMenu = function(data,callback){
-    
-    var obj =[];
-    async.waterfall([
-      function(callback){
-          pool.getConnection(function(err,connection){
-              var coffeeCombiMenuSql = "SELECT t.coffee_id, t.price, c.name,c.picture_url,c.picture_version,c.description from combiDrinkMenu AS t JOIN coffee AS c ON t.coffee_id = c.coffee_id";
-              
-              connection.query(coffeeCombiMenuSql,function(err,coffeeCombiMenu){
+async function getCoffeeCombiMenu(){
+
+    return new Promise(function(resolve,reject){
+
+        pool.getConnection(function(err,connection){
+            var coffeeCombiMenuSql = "SELECT t.coffee_id, t.price, c.name,c.picture_url,c.picture_version,c.description from combiDrinkMenu AS t JOIN coffee AS c ON t.coffee_id = c.coffee_id";
+
+            connection.query(coffeeCombiMenuSql,function(err,coffeeCombiMenu){
                 logger.log('debug','query '+coffeeCombiMenuSql);
                 connection.release();
-                if(err){return callback(err,obj)};
-                callback(null,coffeeCombiMenu);
-              })
-          })
-      },function(coffeeCombiMenu,callback){
-          if(coffeeCombiMenu.length==0) return callback(null,emptyResult);
-          forEach(coffeeCombiMenu,function(item,index,arr){
-              var objTemp = {
-                  "coffee_id" : coffeeCombiMenu[index].coffee_id,
-                  "name" : coffeeCombiMenu[index].name,
-                  "price" : coffeeCombiMenu[index].price,
-                  "picture_url" : coffeeCombiMenu[index].picture_url,
-                  "version" : coffeeCombiMenu[index].picture_version,
-                  "description" : coffeeCombiMenu[index].description
-              }
-              obj.push(objTemp);
-  
-              if(index== coffeeCombiMenu.length-1)
-                  callback(null,obj);
-          })
-      }
-    ],function(err,results){
-        logger.log('debug','/drink/combiMenu response : %j'+results);
-      callback(null,results);
-    })
-
-  };
-
-
-
-
-exports.getCoffeeMyMenu = function(user_id,callback){
-    
-
-   var obj =[];
-    async.waterfall([
-        function(callback){
-            pool.getConnection(function(err,connection){
-                var myMenuSql = "Select coffee_id from myDrinkMenu where user_id = ?";
-
-                connection.query(myMenuSql,user_id,function(err,myMenu){
-                    connection.release();
-                    if(err){return callback(err,obj)};
-                    logger.log('debug','query '+myMenuSql+'['+user_id+']');
-                    callback(null,myMenu);
-                })
+                if(err){return reject(err)};
+                resolve(coffeeCombiMenu);
             })
-        },function(myMenu,callback){
+        })
 
-            if(myMenu.length==0) return callback(null,emptyResult);
+    })
+}
 
-            pool.getConnection(function(err,connection){
-                if(err){return callback(err,obj)};
-                var coffeeListSql = "Select coffee_id, name, picture_url, picture_version, description from coffee where coffee_id = ?";
-                
-                forEach(myMenu,function(item,index,arr){
+async function getCoffeeIdsbyUserID(user_id){
 
-                    connection.query(coffeeListSql,myMenu[index].coffee_id,function(err,coffeeList){
-                        logger.log('debug','query '+coffeeListSql+" "+myMenu[index].coffee_id);
-                        
-                        if(err){return callback(err,obj)};
-                        console.log("coffeeList : ",coffeeList);
-                      
-                        var objTemp = {
-                                "coffee_id" : coffeeList[0].coffee_id,
-                                "name" : coffeeList[0].name,
-                                "picture_url" : coffeeList[0].picture_url,
-                                "version" : coffeeList[0].picture_version,
-                                "description" : coffeeList[0].description
-                        }
-                      
-                        obj.push(objTemp);
+    return new Promise(function(resolve,reject){
 
-                     if(index==myMenu.length-1){
+        pool.getConnection(function(err,connection){
+            var myMenuSql = "Select coffee_id from myDrinkMenu where user_id = ?";
+
+            connection.query(myMenuSql,user_id,function(err,myMenu){
+                connection.release();
+                if(err){return reject(err)};
+                logger.log('debug','query '+myMenuSql+'['+user_id+']');
+                resolve(myMenu);
+            })
+        })
+
+    })
+}
+
+async function getCoffeeDetailbyCoffeeIds(coffeeIds){
+
+    return new Promise(function(resolve,reject){
+
+        if(coffeeIds.length==0) return resolve(emptyResult);
+
+        pool.getConnection(function(err,connection){
+            if(err){return reject(err)};
+            var coffeeListSql = "Select coffee_id, name, picture_url, picture_version, description from coffee where coffee_id = ?";
+
+            forEach(coffeeIds,function(item,index,arr){
+
+                connection.query(coffeeListSql,coffeeIds[index].coffee_id,function(err,coffeeList){
+                    logger.log('debug','query '+coffeeListSql+" "+coffeeIds[index].coffee_id);
+
+                    if(err){return reject(err)};
+                    console.log("coffeeList : ",coffeeList);
+
+                    var objTemp = {
+                        "coffee_id" : coffeeList[0].coffee_id,
+                        "name" : coffeeList[0].name,
+                        "picture_url" : coffeeList[0].picture_url,
+                        "version" : coffeeList[0].picture_version,
+                        "description" : coffeeList[0].description
+                    }
+
+                    obj.push(objTemp);
+
+                    if(index==coffeeIds.length-1){
                         connection.release();
-                        callback(null,obj);   
-                      }
-                    })
+                        resolve(obj);
+                    }
                 })
             })
-        }
-    ],function(err,results){
-        logger.log('debug','/drink/myMenu response : %j'+results);
-        callback(null,results);
+        })
     })
-};
-
+}
 
 exports.insertCoffee = function(data,callback){
     var name = data.name;
