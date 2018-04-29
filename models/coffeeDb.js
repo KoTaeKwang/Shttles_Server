@@ -88,7 +88,6 @@ async function getCoffeeList() {
 
     return new Promise(function(resolve,reject){
 
-        var obj = [];
         var coffeeListSql = "select coffee.coffee_id, coffee.name, coffee.picture_url, coffee.description, coffee.picture_version, coffee_size.price , coffee_state.name as state\n" +
             " from coffee as coffee  inner join coffee_size as coffee_size on coffee.coffee_id = coffee_size.coffee_id inner join coffee_state as coffee_state on coffee.coffee_id = coffee_state.coffee_id;"
         pool.getConnection(function (err, connection) {

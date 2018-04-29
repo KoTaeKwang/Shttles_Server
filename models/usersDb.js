@@ -11,7 +11,7 @@ exports.userAdd = function(data,callback){
     var obj = [];
 
     pool.getConnection(function(err,connection){
-        if(err){logger.log('error','connection error'+err); return callback(err,obj)};
+        if(err){logger.log('error','connection error'+err);  connection.release(); return callback(err,obj)};
 
         var getTypeUser = "Select type from user where user_id = ?"
 

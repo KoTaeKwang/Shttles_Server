@@ -72,8 +72,6 @@ exports.getOrderList = function(user_id,callback){
 
 };
 
-
-
 exports.getOrderDetail = function(order_id,callback){
     pool.getConnection(function(err,connection){
         var optionDetailSql = "select o.order_id, o.address,o.state, o.price as orderPrice, o.user_id, o.date, c.count,coffee.name, coffee_option.name as optionName,c.price as coffeePrice from orders AS o JOIN coffee_orders AS c ON o.order_id = c.order_id JOIN coffeeoption_orders AS co on co.coffee_ordersId = c.coffee_ordersId JOIN coffee on coffee.coffee_id = c.coffee_id JOIN coffee_option on coffee_option.option_id = co.option_id where o.order_id = ?";

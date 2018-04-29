@@ -3,9 +3,7 @@ var forEach = require('async-foreach').forEach;
 var async = require('async');
 var HashMap = require('hashmap');
 var logger = require('../winston');
-
 var pool = require('../mysql');
-
 var emptyResult = [{"result":"empty"}]
 
 exports.insertFood = function(data,callback){
@@ -31,78 +29,115 @@ exports.insertFood = function(data,callback){
 }
 
 
-exports.getFoodList = function(market_name,callback){
-  
- 
-    console.log("market_name : ",market_name);
+exports.getFoodList = async function(market_id,callback){
+
+    try{
+        const getFoodListPromise = await getFoodList(market_id);
+        const responseFoodListPromise = await responseFoodList(getFoodListPromise);
+        logger.log('debug','/food/list/'+market_id+' response : %j'+responseFoodListPromise);
+        callback(null,responseFoodListPromise);
+
+    }catch(e){
+        callback(e,null);
+    }
+
+}
+
+
+
+exports.getFoodOption = async function(food_id,callback){
+
+
+    try{
+        const getFoodOptionPromise = await getFoodOption(food_id);
+        const responseFoodOptionPromise = await responseFoodOption(getFoodOptionPromise);
+        logger.log('debug','/food/'+food_id+' response : %j'+responseFoodOptionPromise);
+        callback(null,responseFoodOptionPromise);
+    }catch (e) {
+        callback(e,null);
+    }
+}
+
+
+
+
+async function getFoodList(market_id){
+
+    return new Promise(function(resolve,reject){
+        var foodListSql = "Select food_id,name,price,picture_url,description from food where market_id = ?";
+        pool.getConnection(function(err,connection){
+            if(err){ connection.release(); return reject(err);}
+
+            connection.query(foodListSql,market_id,function(err,foodList){
+                connection.release();
+                resolve(foodList)
+            })
+        })
+
+    })
+
+}
+
+async function responseFoodList(foodList){
     var obj = [];
-    var foodListSql = "Select food_id,name,price,picture_url,description from food where market_name = ?";
-    async.waterfall([
-        function(callback){
-            pool.getConnection(function(err,connection){
-                if(err) throw err;
+    return new Promise(function(resolve,reject){
+        if(foodList == null || foodList.length==0) return resolve(emptyResult);
 
-                connection.query(foodListSql,market_name,function(err,foodList){
-                    callback(null,foodList)
-                })
-            })
-        },function(foodList,callback){
+        forEach(foodList,function(item,index,arr){
+            var objTemp = {
+                "food_id" : foodList[index].food_id,
+                "name" : foodList[index].name,
+                "price" : foodList[index].price,
+                "picture_url" : foodList[index].picture_url,
+                "picture_version" : foodList[index].picture_version,
+                "description" : foodList[index].description
+            }
 
-            if(foodList == null | foodList.length==0) return callback(null,emptyResult);
+            obj.push(objTemp);
 
-            forEach(foodList,function(item,index,arr){
-                var objTemp = {
-                    "food_id" : foodList[index].food_id,
-                    "name" : foodList[index].name,
-                    "price" : foodList[index].price,
-                    "picture_url" : foodList[index].picture_url,
-                    "picture_version" : foodList[index].picture_version,
-                    "description" : foodList[index].description
-                }
-
-                obj.push(objTemp);
-
-                if(index== foodList.length-1)
-                    callback(null,obj);
-            })
-        }
-    ],function(err,results){
-        callback(results);
+            if(index== foodList.length-1)
+                resolve(obj);
+        })
     })
 }
 
-exports.getFoodOption = function(food_id,callback){
-   
+async function getFoodOption(food_id){
 
-    console.log("food_id : ",food_id);
-    var obj = [];
-    var foodOptionSql = "Select option_id,name,price from food_option where food_id = ?"
+    return new Promise(function(resolve,reject){
+        var foodOptionSql = "Select option_id,name,price from food_option where food_id = ?"
 
-    async.waterfall([
-        function(callback){
-            pool.getConnection(function(err,connection){
-                if(err) throw err;
-                connection.query(foodOptionSql,food_id,function(err,foodOption){
-                    callback(null,foodOption);
-                })
+        pool.getConnection(function(err,connection){
+            if(err) {connection.release(); return reject (err);}
 
+            connection.query(foodOptionSql,food_id,function(err,foodOption){
+                connection.release();
+                resolve(foodOption);
             })
-        },function(foodOption,callback){
-            if(foodOption.length==0) return callback(null,emptyResult);
-            forEach(foodOption,function(item,index,arr){
-                var objTemp = {
-                    "option_id" : foodOption[index].option_id,
-                    "option_name" : foodOption[index].name,
-                    "option_price" : foodOption[index].price
-                }
-                obj.push(objTemp);
 
-                if(index == foodOption.length-1)
-                    callback(null,obj);
-            })
-        }
-    ],function(err,results){
-        callback(results);
+        })
+    })
+
+}
+
+async function responseFoodOption(foodOption){
+
+    return new Promise(function(resolve,reject){
+        var obj = [];
+
+        if(foodOption == null || foodOption.length==0) return resolve(emptyResult);
+        forEach(foodOption,function(item,index,arr){
+            var objTemp = {
+                "option_id" : foodOption[index].option_id,
+                "option_name" : foodOption[index].name,
+                "option_price" : foodOption[index].price
+            }
+            obj.push(objTemp);
+
+            if(index == foodOption.length-1)
+                resolve(obj);
+        })
+
     })
 }
+
 
