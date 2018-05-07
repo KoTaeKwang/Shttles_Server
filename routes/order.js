@@ -10,6 +10,7 @@ router.get('/:user_id',function(req,res,next){
   db.getOrderList(req.params.user_id,function(err,success){
     if(err){next(err)}
     else{
+       logger.log('debug','get /order/'+req.params.user_id+'  response : %j'+success);
        res.json(success);
     }
   })

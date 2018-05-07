@@ -3,219 +3,427 @@ var forEach = require('async-foreach').forEach;
 var async = require('async');
 var HashMap = require('hashmap');
 var logger = require('../winston');
-
+var fcm = require('../fcm');
 var pool = require('../mysql');
 
 var emptyResult = [{"result":"empty"}]
+var order_id;
 
-exports.getOrderList = function(user_id,callback){
 
-    console.log('userid : ',user_id);
 
-    async.waterfall([
-        function(callback){
-            pool.getConnection(function(err,connection){
-                var coffeeListSql ="select o.order_id, o.state, o.price,o.user_id, c.count,coffee.name from orders AS o JOIN coffee_orders AS c ON o.order_id = c.order_id JOIN coffee on coffee.coffee_id = c.coffee_id where o.user_id = ?  order by o.date DESC"
-                
-                connection.query(coffeeListSql,user_id,function(err,coffeeList){
-                    console.log("coffeeList : ",coffeeList);
-                    callback(null,coffeeList);              
-                })
-              });
-        },
-        function(coffeeList,callback){
-             var obj = [];
-             var standard = -1;
-             var coffeeTemp=[];
-            
-             if(coffeeList.length==0){
-                 return callback(null,emptyResult);
-             }
+exports.getOrderList = async function(user_id,callback){
+    var obj =[];
 
-            forEach(coffeeList,function(item,index,arr){
-                console.log('index : ',index, "  coffeeList.length : ",coffeeList.length);
-                console.log('standard : ',standard, "  order_id : ",coffeeList[index].order_id);
-                if(standard!=coffeeList[index].order_id){ //다를 때 초기화
-                        if(index>0){
-                            var resultTemp ={"order_id" : coffeeList[index-1].order_id,
-                                            "order_price" : coffeeList[index-1].price,
-                                            "order_state" : coffeeList[index-1].state,
-                                            "food":[],
-                                            "coffee": coffeeTemp };
-
-                            obj.push(resultTemp);
-                            console.log("index : ",index,"  coffeeTemp : ",coffeeTemp);  
-                        }
-                        coffeeTemp=[];
-                }
-
-                standard=coffeeList[index].order_id;
-                var resultCoffeeTemp = {"name" : coffeeList[index].name, "count" : coffeeList[index].count};
-                coffeeTemp.push(resultCoffeeTemp);
-
-                if(index==coffeeList.length-1){
-                    var resultTemp ={"order_id" : coffeeList[index].order_id,
-                    "order_price" : coffeeList[index].price,
-                    "order_state" : coffeeList[index].state,
-                    "food":[],
-                    "coffee": coffeeTemp };
-                    obj.push(resultTemp);
-                    console.log("index : ",index,"  coffeeTemp : ",coffeeTemp);  
-                    callback(null,obj);
-                }
-                    
-            });
+    try{
+        const getPoolConnectionPromise = await getPoolConnection();
+        const getOrdersPromise = await getOrders(user_id,getPoolConnectionPromise);
+        if(getOrdersPromise.length ==0){
+            return callback(null,emptyResult)
         }
-    ],function(err,results){
-        callback(results);
-    })
 
-};
+        forEach(getOrdersPromise,async function(item,index,arr){
+            const coffeeList = await getCoffeeListByOrderId(getOrdersPromise[index].order_id,getPoolConnectionPromise);
+            const foodList = await getFoodListByOrderId(getOrdersPromise[index].order_id,getPoolConnectionPromise);
+            const makeResponseOrderListPromise = await makeResponseOrderList(getOrdersPromise[index],coffeeList,foodList);
+            console.log("Response : ",makeResponseOrderListPromise);
+            obj.push(makeResponseOrderListPromise);
 
-exports.getOrderDetail = function(order_id,callback){
-    pool.getConnection(function(err,connection){
-        var optionDetailSql = "select o.order_id, o.address,o.state, o.price as orderPrice, o.user_id, o.date, c.count,coffee.name, coffee_option.name as optionName,c.price as coffeePrice from orders AS o JOIN coffee_orders AS c ON o.order_id = c.order_id JOIN coffeeoption_orders AS co on co.coffee_ordersId = c.coffee_ordersId JOIN coffee on coffee.coffee_id = c.coffee_id JOIN coffee_option on coffee_option.option_id = co.option_id where o.order_id = ?";
-        var obj = [];
-        var coffeename = "";
-        var coffeeOptionArr = [];
-        var coffee=[];
-        async.waterfall([
-            function(callback){
-                pool.getConnection(function(err,connection){
-                    connection.query(optionDetailSql,order_id,function(err,optionDetail){
-                        console.log("optionDetail : ",optionDetail);
-                        callback(null,optionDetail);
-                    })
-                })
-            },
-
-            function(optionDetail,callback){
-               
-                forEach(optionDetail,function(item,index,arr){
-                    
-                    if(coffeename != optionDetail[index].name){
-                        if(index>0){
-                            var coffeeTemp = {
-                                "name" : optionDetail[index-1].name,
-                                "count" : optionDetail[index-1].count,
-                                "price" : optionDetail[index-1].price,
-                                "option" : coffeeOptionArr    
-                            }
-                            coffee.push(coffeeTemp);
-                            coffeeOptionArr=[];
-                        }
-
-                    } 
-                    console.log("index: ",index," coffeename : ",optionDetail[index].name, "  optionName : ",optionDetail[index].optionName);
-                    coffeename = optionDetail[index].name;
-                    var optionTemp = {"name" : optionDetail[index].optionName}
-                    coffeeOptionArr.push(optionTemp);
-                    
-
-                    if(index==optionDetail.length-1){
-                        var coffeeTemp = {
-                            "name" : optionDetail[index-1].name,
-                            "count" : optionDetail[index-1].count,
-                            "price" : optionDetail[index-1].price,
-                            "option" : coffeeOptionArr    
-                        }
-                        coffee.push(coffeeTemp);
-
-                        var objTemp = {
-                            "order_id" : optionDetail[index].order_id,
-                            "order_date" : optionDetail[index].date,
-                            "order_state" : optionDetail[index].state,
-                            "order_price" : optionDetail[index].orderPrice,
-                            "order_address" : optionDetail[index].address,
-                            "coffee" : coffee,
-                            "food" : []
-                        }
-                        callback(null,objTemp);
-                    }
-
-               })   
-
+            if(getOrdersPromise.length -1 == index){
+                await releaseConnection(getPoolConnectionPromise);
+                callback(null,obj);
             }
-        ],function(err,results){
-            callback(results);
-        })
-    
-    });
-};
+        });
+
+    }catch (e) {
+        callback(e,null);
+    }
+
+}
 
 
-exports.insertOrder = function (data, callback) {
+exports.getOrderDetail = async function(order_id,callback){
+
+    try{
+        const getPoolConnectionPromise = await getPoolConnection();
+        const getOrdersByOrderIdPromise = await getOrdersByOrderId(order_id,getPoolConnectionPromise);
+        const coffeeList  = await getCoffeeListByOrderId(order_id,getPoolConnectionPromise);
+        const foodList = await getFoodListByOrderId(order_id,getPoolConnectionPromise);
+        const coffeeObj = await makeCoffeeListWithOption(coffeeList,getPoolConnectionPromise);
+        const foodObj = await makeFoodListWithOption(foodList,getPoolConnectionPromise);
+        const responseOrderDetail = await makeOrderDetailResponse(getOrdersByOrderIdPromise,coffeeObj,foodObj);
+        await releaseConnection(getPoolConnectionPromise);
+        callback(null,responseOrderDetail);
+    }catch(e){
+        callback(e,null);
+    }
+
+}
+
+
+exports.insertOrder = async function (data, callback) {
     console.log("data : " ,data);
+
     var user_id  = data.user_id;
     var order_address =data.order_address
     var order_totalPrice = data.order_totalPrice
     var coffee= data.coffee;
     var food = data.food;
-    var order_id;
-    var coffee_ordersId;
-    var food_ordersId;
-    console.log("userId :" , data.user_id);
-    console.log("address : ",data.order_address);
-    console.log("totalPrice : ",data.order_totalPrice);
-    console.log("Coffee : ",data.coffee);
-    console.log("food : " ,data.food)
-    
 
-    pool.getConnection(function(err,connection){
-        if(err) throw err; 
-        var obj =[];
-        async.waterfall([
-            function(callback){
+
+    console.log("userId :" , user_id);
+    console.log("address : ",order_address);
+    console.log("totalPrice : ",order_totalPrice);
+    console.log("Coffee : ",coffee);
+    console.log("food : " ,food);
+
+    var obj = {
+        "userId" : user_id,
+        "address" : order_address,
+        "totalPrice" : order_totalPrice,
+        "coffee" : coffee,
+        "food" : food
+    }
+
+    logger.log('debug','/order request -> userId : '+user_id+', address : '+order_address+', totalPrice : '+order_totalPrice+', coffee : '+coffee+', food : '+food);
+
+    try{
+        const beginTransactionPromise = await beginTransaction();
+        const insertOrderPromise = await insertOrder(data,beginTransactionPromise);
+        const insertCoffeeOrderAndOptionPromise = await insertCoffeeOrderAndOption(coffee,insertOrderPromise);
+        const insertFoodOrderAndOptionPromise = await insertFoodOrderAndOption(food,insertCoffeeOrderAndOptionPromise);
+        const commitConnectionPromise = await commitConnection(insertFoodOrderAndOptionPromise);
+
+        const getPoolConnectionPromise = await getPoolConnection();
+        const sendMessageWithFcmPromise = await sendMessageWithFcm(user_id,obj,getPoolConnectionPromise);
+        await releaseConnection(getPoolConnectionPromise);
+        logger.log('debug','/order response : %j'+commitConnectionPromise);
+        callback(null,commitConnectionPromise);
+
+    }catch(e){
+        callback(e,null);
+    }
+
+
+}
+
+async function releaseConnection(connection){
+    return new Promise(function (resolve,reject) {
+        var obj = [];
+        connection.release();
+        resolve(obj);
+    })
+}
+
+async function sendMessageWithFcm(user_id,orderInfo,connection){
+
+    return new Promise(function (resolve,reject) {
+
+        var getPushIdSql = "select pushId from user where user_id = ?"
+
+        connection.query(getPushIdSql,user_id,function(err,pushId){
+            if(err){
+                logger.log('error', 'connection error' + err);
+                connection.release();
+                reject(err);
+            }
+
+            var push_token = pushId[0].pushId;
+
+
+            var message ={
+                to : push_token,
+                notification : {
+                    title : "shuttles Order",
+                    body : orderInfo
+                }
+            }
+
+            fcm.send(message,function (err,response) {
+                if(err){
+                    connection.release();
+                    logger.log('error','FCM send fail : '+err);
+                    reject(err);
+                }else{
+                    connection.release();
+                    logger.log('debug','FCM send success');
+                    resolve(response);
+                }
                 
-                connection.beginTransaction(function(err){ //orders insert
-                    if(err){return callback(err,obj)};
-        
-                    var addOrdersSql = "insert into orders(state,address,price,user_id) values(?,?,?,?)";
-                
-                    var orders = [
-                     0, order_address, order_totalPrice,user_id
-                    ]
-        
-                    console.log("orders : ",orders);
-        
-                    var query = connection.query(addOrdersSql,orders,function(err,results){
-                       console.log(query.sql);
-                        if(err){return connection.rollback(function(){
-                            connection.release();
-                            return callback(err,obj);
-                        })
-                    }
-                    order_id = results.insertId;
-                    callback(null,connection);
-                })                 
             })
 
-            },function(connection,callback){ //coffeeorders insert
-                   
-                forEach(coffee,function(item,index,arr){
-                    var insertCoffeeOrdersSql = "insert into coffee_orders(count,coffee_id,order_id,price) values(?,?,?,?)";
-                    
-                    var coffee_orders = [
-                        coffee[index].count, coffee[index].coffee_id, order_id , coffee[index].price
-                    ]
+        })
 
-                    console.log("coffee_orders " , coffee_orders);
-                    
-                    var query = connection.query(insertCoffeeOrdersSql,coffee_orders,function(err,results){
-                        console.log(query.sql);
-                        if(err){return connection.rollback(function(){
-                            connection.release();
-                            return callback(err,obj);
-                        })
-                     } 
-                   
-                     coffee_ordersId = results.insertId;
+    })
+}
 
-                     if(typeof coffee[index].option == "undefined"){
-                         console.log("coffee is undefined");
-                     }
-                    else{
-                     forEach(coffee[index].option,function(item,optionIndex,arr){
+async function getPoolConnection(){
+    return new Promise(function(resolve,reject){
+
+        pool.getConnection(function (err,connection) {
+
+            if(err){
+                logger.log('error', 'connection error' + err);
+                connection.release();
+                reject(err);
+            }
+
+            resolve(connection);
+
+        })
+    })
+}
+
+async function getOrders(user_id, connection){
+
+    return new Promise(function (resolve,reject) {
+
+        var getOrdersSql = "select * from orders where user_id = ?"
+
+        connection.query(getOrdersSql,user_id,function(err,orderList){
+            if(err){
+                logger.log('error', 'connection error' + err);
+                connection.release();
+                reject(err);
+            }
+
+            resolve(orderList);
+
+        })
+    })
+}
+
+async function getCoffeeListByOrderId(orders_id,connection){
+
+    return new Promise(function (resolve,reject) {
+
+        var getCoffeeListByOrderIdSql = "select co.coffee_ordersId,co.count, c.name, co.price from coffee_orders AS co JOIN coffee AS c on co.coffee_id = c.coffee_id where order_id = ?"
+
+        connection.query(getCoffeeListByOrderIdSql, orders_id,function(err,coffeeList){
+            if(err){
+                logger.log('error', 'connection error' + err);
+                connection.release();
+                reject(err);
+            }
+            resolve(coffeeList);
+        })
+
+    })
+}
+
+async function getFoodListByOrderId(orders_id,connection){
+
+    return new Promise(function (resolve,reject) {
+
+        var getFoodListByOrderIdSql = "select fo.food_ordersId,fo.count, f.name, fo.price from food_orders AS fo JOIN food AS f on fo.food_id = f.food_id where order_id = ?"
+
+        connection.query(getFoodListByOrderIdSql, orders_id,function(err,foodList){
+            if(err){
+                logger.log('error', 'connection error' + err);
+                connection.release();
+                reject(err);
+            }
+            resolve(foodList);
+        })
+
+    })
+}
+
+async function makeResponseOrderList(orders,coffeeList,foodList){
+
+    return new Promise(function (resolve,reject) {
+
+        var obj ={
+            "order_id" : orders.order_id,
+            "coffee" : coffeeList,
+            "food" : foodList,
+            "order_price" : orders.price,
+            "order_state" : orders.state
+        }
+
+        resolve(obj);
+    })
+
+}
+
+async function getOrdersByOrderId(order_id,connection){
+
+    return new Promise(function (resolve,reject) {
+
+        var getOrdersSql = "select * from orders where order_id = ?";
+
+        connection.query(getOrdersSql,order_id,function(err,order){
+            if(err){
+                logger.log('error', 'connection error' + err);
+                connection.release();
+                reject(err);
+            }
+            resolve(order);
+        })
+
+    })
+}
+
+async function makeCoffeeListWithOption(coffeeList,connection){
+
+    return new Promise(function(resolve,reject){
+        var obj = [];
+
+        var getCoffeeOptionList = "select co.name from coffeeOption_orders AS coo JOIN coffee_option AS  co ON coo.option_id = co.option_id where coffee_ordersId = ?"
+
+        forEach(coffeeList, async function(item,index,arr){
+
+            connection.query(getCoffeeOptionList,coffeeList[index].coffee_ordersId,function(err,optionNameList){
+                if(err){
+                    logger.log('error', 'connection error' + err);
+                    connection.release();
+                    reject(err);
+                }
+
+                var coffeeObj = {
+                    "name" : coffeeList[index].name,
+                    "count" : coffeeList[index].count,
+                    "price" : coffeeList[index].price,
+                    "option" : optionNameList
+                }
+                obj.push(coffeeObj);
+
+                if(coffeeList.length-1 == index){
+                    resolve(obj);
+                }
+            })
+
+
+        })
+    })
+}
+
+async function makeFoodListWithOption(foodList,connection){
+
+    return new Promise(function(resolve,reject){
+        var obj = [];
+
+        if(foodList.length == 0){resolve(obj)}
+
+        var getFoodOptionList = "select fo.name from foodOption_orders AS foo JOIN food_option AS  fo ON foo.option_id = fo.option_id where food_ordersId = ?"
+
+        forEach(foodList, async function(item,index,arr){
+
+            connection.query(getFoodOptionList,foodList[index].food_ordersId,function(err,optionNameList){
+                if(err){
+                    logger.log('error', 'connection error' + err);
+                    connection.release();
+                    reject(err);
+                }
+                var foodObj = {
+                    "name" : foodList[index].name,
+                    "count" : foodList[index].count,
+                    "price" : foodList[index].price,
+                    "option" : optionNameList
+                }
+                obj.push(foodObj);
+
+                if(foodList.length-1 == index){
+                    resolve(obj);
+                }
+            })
+
+
+        })
+    })
+}
+
+async function makeOrderDetailResponse(orders,coffeeObj,foodObj){
+
+    return new Promise(function(resolve,reject){
+        console.log("orders : ",orders);
+        var obj ={
+            "order_id" : orders[0].order_id,
+            "order_date" : orders[0].date,
+            "order_state" : orders[0].state,
+            "order_address" : orders[0].address,
+            "coffee" : coffeeObj,
+            "food" : foodObj
+        }
+        resolve(obj);
+    })
+
+}
+
+async function beginTransaction(){
+
+    return new Promise(function(resolve,reject){
+
+        pool.getConnection(function(err,connection){
+            if(err){connection.release(); return reject(err);}
+
+            connection.beginTransaction(function(err){
+                if(err){connection.release(); return reject(err);}
+
+                resolve(connection);
+
+            })
+
+        })
+    })
+}
+
+async function insertOrder(data, connection){
+
+    return new Promise(function(resolve,reject){
+
+        var user_id  = data.user_id;
+        var order_address =data.order_address
+        var order_totalPrice = data.order_totalPrice
+
+        var addOrdersSql = "insert into orders(state,address,price,user_id) values(?,?,?,?)";
+
+        var orders = [
+            0, order_address, order_totalPrice,user_id
+        ]
+
+        console.log("orders : ",orders);
+
+        var query = connection.query(addOrdersSql,orders,function(err,results){
+            console.log(query.sql);
+            if(err){return connection.rollback(function(){
+                connection.release();
+                return reject(err);
+            })
+            }
+            order_id = results.insertId;
+            resolve(connection);
+        })
+    })
+}
+
+async function insertCoffeeOrderAndOption(coffee,connection){
+
+    return new Promise(function (resolve,reject) {
+
+        forEach(coffee,function(item,index,arr){
+            var insertCoffeeOrdersSql = "insert into coffee_orders(count,coffee_id,order_id,price) values(?,?,?,?)";
+
+            var coffee_orders = [
+                coffee[index].count, coffee[index].coffee_id, order_id , coffee[index].price
+            ]
+
+            console.log("coffee_orders " , coffee_orders);
+
+            var query = connection.query(insertCoffeeOrdersSql,coffee_orders,function(err,results){
+                console.log(query.sql);
+                if(err){return connection.rollback(function(){
+                    connection.release();
+                    return reject(err);
+                })
+                }
+
+                var coffee_ordersId = results.insertId;
+
+                if(typeof coffee[index].option == "undefined"){
+                    console.log("coffee is undefined");
+                }
+                else{
+                    forEach(coffee[index].option,function(item,optionIndex,arr){
                         var insertCoffeeOptionSql = "insert into coffeeOption_orders(coffee_ordersId,option_id) values(?,?)";
 
                         var coffee_options = [coffee_ordersId,coffee[index].option[optionIndex].option_id];
@@ -224,78 +432,97 @@ exports.insertOrder = function (data, callback) {
                             console.log(query.sql);
                             if(err){return connection.rollback(function(){
                                 connection.release();
-                                return callback(err,obj);
+                                return reject(err);
                             })
-                         } 
+                            }
 
                         })
                     })
 
                 }
 
-                })
-            
-                    if(coffee.length-1 == index)
-                        callback(null,connection);
-                })
-            },function(connection,callback){// foodorders insert
-                if(typeof food == "undefined"){ console.log("food is undefined"); callback(null,connection);}
-                else{
-                forEach(food,function(item,index,arr){
-                    var insertFoodOrdersSql = "insert into food_orders(count,food_id,order_id,price) values(?,?,?,?)";
-                    
-                    var food_orders = [
-                        food[index].count, food[index].food_id, order_id , food[index].price
-                    ]
+            })
 
-                    console.log("food_orders " , food_orders);
-                    
-                    var query = connection.query(insertFoodOrdersSql,food_orders,function(err,results){
-                        console.log(query.sql);
-                        if(err){return connection.rollback(function(){
-                            tconnection.release();
-                            return callback(err,obj);
-                        })
-                     } 
-                  
-                     food_ordersId = results.insertId;
+            if(coffee.length-1 == index)
+                resolve(connection);
+        })
 
+    })
+}
 
-                     forEach(food[index].option,function(item,optionIndex,arr){
-                        var insertFoodOptionSql = "insert into foodOption_orders(food_ordersId,option_id) values(?,?)";
+async function insertFoodOrderAndOption(food,connection){
 
-                        var food_options = [food_ordersId,food[index].option[optionIndex].option_id];
+    return new Promise(function(resolve,reject){
 
-                        var query = connection.query(insertFoodOptionSql,food_options,function(err,results){
-                            console.log(query.sql);
-                            if(err){return connection.rollback(function(){
-                                connection.release();
-                            return callback(err,obj);
-                            })
-                         } 
+        if(typeof food == "undefined"){ console.log("food is undefined"); resolve(connection);}
+        else{
+            forEach(food,function(item,index,arr){
+                var insertFoodOrdersSql = "insert into food_orders(count,food_id,order_id,price) values(?,?,?,?)";
 
-                        })
+                var food_orders = [
+                    food[index].count, food[index].food_id, order_id , food[index].price
+                ]
+
+                console.log("food_orders " , food_orders);
+
+                var query = connection.query(insertFoodOrdersSql,food_orders,function(err,results){
+                    console.log(query.sql);
+
+                    if(err){return connection.rollback(function(){
+                        connection.release();
+                        return reject(err);
                     })
+                    }
 
+                    var food_ordersId = results.insertId;
+
+
+                    if(typeof food[index].option == "undefined"){
+                        console.log("coffee is undefined");
+                    }
+                    else{
+                        forEach(food[index].option,function(item,optionIndex,arr){
+
+                            var insertFoodOptionSql = "insert into foodOption_orders(food_ordersId,option_id) values(?,?)";
+
+                            var food_options = [food_ordersId,food[index].option[optionIndex].option_id];
+
+                            var query = connection.query(insertFoodOptionSql,food_options,function(err,results){
+                                console.log(query.sql);
+                                if(err){return connection.rollback(function(){
+                                    connection.release();
+                                    return reject(obj);
+                                })
+                                }
+
+                            })
+                        })
+
+                    }
                 })
-            
-                    if(food.length-1 == index)
-                        callback(null,connection);
-                })
-            }
+
+                if(food.length-1 == index)
+                    resolve(connection);
+            })
         }
-        ],function(err,connection){
-            connection.commit(function(err){
-              if(err)
+
+    })
+}
+
+async function commitConnection(connection){
+    return new Promise(function (resolve,reject) {
+
+        connection.commit(function(err){
+            if(err){
                 return connection.rollback(function(){
                     connection.release();
-                    return callback(err,obj);
-                })  
-            });
+                    return reject(err);
+                })
+            }
+        });
+        connection.release();
+        var obj =[{"result" : "success"}];
+        resolve(obj);
 
-            var obj =[{"result" : "success"}];
-            callback(obj);
-
-        }) 
     })
 }

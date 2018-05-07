@@ -12,6 +12,7 @@
     "cookie-parser": "~1.4.3",
     "debug": "~2.6.9",
     "express": "~4.15.5",
+    "fcm-node": "^1.2.1",
     "forever": "^0.15.3",
     "hashmap": "^2.3.0",
     "jade": "~1.11.0",

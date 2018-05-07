@@ -14,6 +14,7 @@ router.post('/',function(req,res,next){
   
     if(err){next(err)}
     else{
+      logger.log('debug','response : %j'+success);
        res.json(success);
     }
   })
