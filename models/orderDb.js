@@ -106,11 +106,54 @@ exports.insertOrder = async function (data, callback) {
 
 }
 
+exports.test = async function (data,callback){
+
+    var obj = "shuttles gogogogogogo letgogogogo";
+    var results = {"success" : "ok"};
+    console.log("asfafasfasfasfasfas");
+    try{
+
+        const sendMessageWithFcmPromise = await sendMessageWithFcmTest(obj);
+        callback(null,results);
+    }catch (e) {
+        callback(e,null);
+    }
+}
+
 async function releaseConnection(connection){
     return new Promise(function (resolve,reject) {
         var obj = [];
         connection.release();
         resolve(obj);
+    })
+}
+
+async function sendMessageWithFcmTest(user_id,orderInfo){
+
+    return new Promise(function (resolve,reject) {
+
+
+            var push_token = "damkNr1IMt0:APA91bElPNMVPFgtBBfil_5b7zr7Hq4CKByXYQVT7DGBqqtiHXlkeoxAmPyje9o1F2rD34TzRHvGRgP0lt8Hl_OcVWdf_9MO3NKHHfx8PYABi_E1CSN66I_CNDpwZl8q1Kuo7w5cLN-h";
+
+            var message ={
+                to : push_token,
+                notification : {
+                    title : "shuttles Order",
+                    body : orderInfo
+                }
+            }
+
+            fcm.send(message,function (err,response) {
+                if(err){
+                    logger.log('error','FCM send fail : '+err);
+                    reject(err);
+                }else{
+                    logger.log('debug','FCM send success');
+                    resolve(response);
+                }
+
+            })
+
     })
 }
 
@@ -128,7 +171,6 @@ async function sendMessageWithFcm(user_id,orderInfo,connection){
             }
 
             var push_token = pushId[0].pushId;
-
 
             var message ={
                 to : push_token,
