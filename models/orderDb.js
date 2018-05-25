@@ -5,9 +5,11 @@ var HashMap = require('hashmap');
 var logger = require('../winston');
 var fcm = require('../fcm');
 var pool = require('../mysql');
+const {google} = require('googleapis');
 
 var emptyResult = [{"result":"empty"}]
 var order_id;
+var SCOPES = ['https://www.googleapis.com/auth/firebase.messaging'];
 
 
 
@@ -112,7 +114,6 @@ exports.test = async function (data,callback){
     var results = {"success" : "ok"};
     console.log("asfafasfasfasfasfas");
     try{
-
         const sendMessageWithFcmPromise = await sendMessageWithFcmTest(obj);
         callback(null,results);
     }catch (e) {
@@ -128,12 +129,17 @@ async function releaseConnection(connection){
     })
 }
 
-async function sendMessageWithFcmTest(user_id,orderInfo){
+
+async function sendMessageWithFcmTest(orderInfo){
 
     return new Promise(function (resolve,reject) {
 
+            fcm.fcmOptions.headers = {
+                'Content-Type':'application/json',
+                'Authorization':'key=AIzaSyCOEBsB51Tnmx4pfkaUgqyjoqp15Ar6hxo'
+            }
 
-            var push_token = "damkNr1IMt0:APA91bElPNMVPFgtBBfil_5b7zr7Hq4CKByXYQVT7DGBqqtiHXlkeoxAmPyje9o1F2rD34TzRHvGRgP0lt8Hl_OcVWdf_9MO3NKHHfx8PYABi_E1CSN66I_CNDpwZl8q1Kuo7w5cLN-h";
+            var push_token = "dqN_1asEQks:APA91bH_BzKTvYPfuP6wqWmrC4iUPv0Nn5fFxzmJbE9-2YJ0fRhevcXxEsdqX6VjkkUSTmlBIdsih7AeN35hP-h7XQDiG8lm0vLt6XzW9Yy3ZGR2EvvEOKuMPuMEUyFgbKz_xmKUvXjG";
 
             var message ={
                 to : push_token,
