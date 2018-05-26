@@ -96,9 +96,9 @@ exports.insertOrder = async function (data, callback) {
         const commitConnectionPromise = await commitConnection(insertFoodOrderAndOptionPromise);
 
         const getPoolConnectionPromise = await getPoolConnection();
-        //const sendMessageWithFcmPromise = await sendMessageWithFcm(user_id,obj,getPoolConnectionPromise);
+        const sendMessageWithFcmPromise = await sendMessageWithFcm(user_id,obj,getPoolConnectionPromise);
         await releaseConnection(getPoolConnectionPromise);
-        logger.log('debug','/order response : %j'+commitConnectionPromise);
+        logger.log('debug','/order response : %j',.commitConnectionPromise);
         callback(null,commitConnectionPromise);
 
     }catch(e){
@@ -134,11 +134,6 @@ async function sendMessageWithFcmTest(orderInfo){
 
     return new Promise(function (resolve,reject) {
 
-            fcm.fcmOptions.headers = {
-                'Content-Type':'application/json',
-                'Authorization':'key=AIzaSyCOEBsB51Tnmx4pfkaUgqyjoqp15Ar6hxo'
-            }
-
             var push_token = "dqN_1asEQks:APA91bH_BzKTvYPfuP6wqWmrC4iUPv0Nn5fFxzmJbE9-2YJ0fRhevcXxEsdqX6VjkkUSTmlBIdsih7AeN35hP-h7XQDiG8lm0vLt6XzW9Yy3ZGR2EvvEOKuMPuMEUyFgbKz_xmKUvXjG";
 
             var message ={
@@ -148,6 +143,8 @@ async function sendMessageWithFcmTest(orderInfo){
                     body : orderInfo
                 }
             }
+
+            console.log("fcm###",fcm);
 
             fcm.send(message,function (err,response) {
                 if(err){

@@ -37,7 +37,7 @@ exports.getCoffeeDetail = async function (coffee_id, callback) {
 
     try{
         const getCoffeeDetailPromise = await getCoffeeOption(coffee_id);
-        logger.log('debug','/drink/detail response : %j'+getCoffeeDetailPromise);
+        logger.log('debug','/drink/detail response : %j',getCoffeeDetailPromise);
         callback(null,getCoffeeDetailPromise);
     }catch(e){
         callback(e,null);
@@ -50,7 +50,7 @@ exports.getCoffeeTodayMenu = async function(data,callback){
     try{
         const getCoffeeTodayMenuPromise = await getCoffeeTodayMenu();
         const responseCoffeeTodayMenuPromise = await responseCoffeeTodayMenu(getCoffeeTodayMenuPromise);
-        logger.log('debug','/drink/todayMenu response : %j'+responseCoffeeTodayMenuPromise);
+        logger.log('debug','/drink/todayMenu response : %j',responseCoffeeTodayMenuPromise);
         callback(null,responseCoffeeTodayMenuPromise);
 
     }catch(e){
@@ -63,7 +63,7 @@ exports.getCoffeeCombiMenu = async function(data,callback){
     try{
         const getCoffeeCombiMenuPromise = await getCoffeeCombiMenu();
         const responseCoffeeCombiMenuPromise = await responseCoffeeTodayMenu(getCoffeeCombiMenuPromise);
-        logger.log('debug','/drink/combiMenu response : %j'+responseCoffeeCombiMenuPromise);
+        logger.log('debug','/drink/combiMenu response : %j',responseCoffeeCombiMenuPromise);
         callback(null,responseCoffeeCombiMenuPromise);
 
     }catch(e){
@@ -76,7 +76,7 @@ exports.getCoffeeMyMenu = async function(user_id,callback){
     try{
         const getCoffeeIdsPromise = await getCoffeeIdsbyUserID(user_id);
         const responseCoffeeMyMenuPromise = await getCoffeeDetailbyCoffeeIds(getCoffeeIdsPromise);
-        logger.log('debug','/drink/myMenu response : %j'+responseCoffeeMyMenuPromise);
+        logger.log('debug','/drink/myMenu response : %j',responseCoffeeMyMenuPromise);
         callback(null,responseCoffeeMyMenuPromise);
 
     }catch(e){

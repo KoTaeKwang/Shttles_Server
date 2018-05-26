@@ -32,7 +32,7 @@ exports.getMarketList = async function(data,callback){
     try{
         const getMakretListPromise = await getMarketList();
         const responseMarketListPromise = await responseMarketList(getMakretListPromise);
-        logger.log('debug','/market response : %j'+responseMarketListPromise);
+        logger.log('debug','/market response : %j',responseMarketListPromise);
         callback(null,responseMarketListPromise);
     }catch (e) {
         callback(e,null);
@@ -70,7 +70,7 @@ exports.getMarketTodayMenu = async function(market_id,callback){
     try{
         const getMarketTodayMenuPromise = await getMarketTodayMenu(market_id);
         const responseMargetTodayMenuPromise = await responseMargetMenu(getMarketTodayMenuPromise);
-        logger.log('debug','/market/todayMenu/'+market_id+' response : %j'+responseMargetTodayMenuPromise);
+        logger.log('debug','/market/todayMenu/'+market_id+' response : %j',responseMargetTodayMenuPromise);
         callback(null,responseMargetTodayMenuPromise);
     } catch (e) {
         callback(e,null)
@@ -100,7 +100,7 @@ exports.getMarketCombiMenu = async function(market_id,callback){
     try{
         const getMarketCombiMenuPromise = await getMarketCombiMenu(market_id);
         const responseMarketCombiMenuPromise = await responseMargetMenu(getMarketCombiMenuPromise);
-        logger.log('debug','/market/combiMenu/'+market_id+' response : %j'+responseMarketCombiMenuPromise);
+        logger.log('debug','/market/combiMenu/'+market_id+' response : %j',responseMarketCombiMenuPromise);
         callback(null,responseMarketCombiMenuPromise);
     }catch (e) {
         callback(e,null)
@@ -133,7 +133,7 @@ exports.getMarketMyMenu = async function(data,callback){
     try{
         const getMarketMyMenuPromise = await getMarketMyMenu(market_id,user_id);
         const responseMarketMyMenuPromise = await responseMargetMenu(getMarketMyMenuPromise);
-        logger.log('debug','/market/myMenu/'+market_id+'/'+user_id+' response : %j'+responseMarketMyMenuPromise);
+        logger.log('debug','/market/myMenu/'+market_id+'/'+user_id+' response : %j',responseMarketMyMenuPromise);
         callback(null,responseMarketMyMenuPromise);
     }catch(e){
         callback(e,null);

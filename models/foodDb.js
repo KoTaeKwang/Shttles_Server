@@ -34,7 +34,7 @@ exports.getFoodList = async function(market_id,callback){
     try{
         const getFoodListPromise = await getFoodList(market_id);
         const responseFoodListPromise = await responseFoodList(getFoodListPromise);
-        logger.log('debug','/food/list/'+market_id+' response : %j'+responseFoodListPromise);
+        logger.log('debug','/food/list/'+market_id+' response : %j',responseFoodListPromise);
         callback(null,responseFoodListPromise);
 
     }catch(e){
@@ -51,7 +51,7 @@ exports.getFoodOption = async function(food_id,callback){
     try{
         const getFoodOptionPromise = await getFoodOption(food_id);
         const responseFoodOptionPromise = await responseFoodOption(getFoodOptionPromise);
-        logger.log('debug','/food/'+food_id+' response : %j'+responseFoodOptionPromise);
+        logger.log('debug','/food/'+food_id+' response : %j',responseFoodOptionPromise);
         callback(null,responseFoodOptionPromise);
     }catch (e) {
         callback(e,null);
