@@ -112,7 +112,7 @@ exports.test = async function (data,callback){
 
     var obj = "shuttles gogogogogogo letgogogogo";
     var results = {"success" : "ok"};
-    console.log("asfafasfasfasfasfas");
+
     try{
         const sendMessageWithFcmPromise = await sendMessageWithFcmTest(obj);
         callback(null,results);
@@ -122,6 +122,7 @@ exports.test = async function (data,callback){
 }
 
 async function releaseConnection(connection){
+
     return new Promise(function (resolve,reject) {
         var obj = [];
         connection.release();
@@ -164,7 +165,7 @@ async function sendMessageWithFcm(user_id,orderInfo,connection){
 
     return new Promise(function (resolve,reject) {
 
-        var getPushIdSql = "select pushId from user where user_id = ?"
+        var getPushIdSql = "select pushId from user where user_id = ?";
 
         connection.query(getPushIdSql,user_id,function(err,pushId){
             if(err){
@@ -172,6 +173,7 @@ async function sendMessageWithFcm(user_id,orderInfo,connection){
                 connection.release();
                 reject(err);
             }
+            connection.release();
 
             var push_token = pushId[0].pushId;
 
@@ -183,13 +185,12 @@ async function sendMessageWithFcm(user_id,orderInfo,connection){
                 }
             }
 
+
             fcm.send(message,function (err,response) {
                 if(err){
-                    connection.release();
                     logger.log('error','FCM send fail : '+err);
                     reject(err);
                 }else{
-                    connection.release();
                     logger.log('debug','FCM send success');
                     resolve(response);
                 }
@@ -536,7 +537,7 @@ async function insertFoodOrderAndOption(food,connection){
                                 console.log(query.sql);
                                 if(err){return connection.rollback(function(){
                                     connection.release();
-                                    return reject(obj);
+                                    return reject(err);
                                 })
                                 }
 
@@ -565,7 +566,6 @@ async function commitConnection(connection){
                 })
             }
         });
-        connection.release();
         var obj =[{"result" : "success"}];
         resolve(obj);
 
