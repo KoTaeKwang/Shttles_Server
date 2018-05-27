@@ -5,11 +5,9 @@ var HashMap = require('hashmap');
 var logger = require('../winston');
 var fcm = require('../fcm');
 var pool = require('../mysql');
-const {google} = require('googleapis');
 
 var emptyResult = [{"result":"empty"}]
 var order_id;
-var SCOPES = ['https://www.googleapis.com/auth/firebase.messaging'];
 
 
 
@@ -458,8 +456,7 @@ async function insertCoffeeOrderAndOption(coffee,connection){
             var query = connection.query(insertCoffeeOrdersSql,coffee_orders,function(err,results){
                 console.log(query.sql);
                 if(err){return connection.rollback(function(){
-                    connection.release();
-                    return reject(err);
+                    reject(err);
                 })
                 }
 
@@ -477,8 +474,7 @@ async function insertCoffeeOrderAndOption(coffee,connection){
                         var query = connection.query(insertCoffeeOptionSql,coffee_options,function(err,results){
                             console.log(query.sql);
                             if(err){return connection.rollback(function(){
-                                connection.release();
-                                return reject(err);
+                                reject(err);
                             })
                             }
 
@@ -488,7 +484,6 @@ async function insertCoffeeOrderAndOption(coffee,connection){
                 }
 
             })
-
             if(coffee.length-1 == index)
                 resolve(connection);
         })
@@ -515,7 +510,6 @@ async function insertFoodOrderAndOption(food,connection){
                     console.log(query.sql);
 
                     if(err){return connection.rollback(function(){
-                        connection.release();
                         return reject(err);
                     })
                     }
@@ -524,7 +518,7 @@ async function insertFoodOrderAndOption(food,connection){
 
 
                     if(typeof food[index].option == "undefined"){
-                        console.log("coffee is undefined");
+                        console.log("food option is undefined");
                     }
                     else{
                         forEach(food[index].option,function(item,optionIndex,arr){
@@ -536,7 +530,6 @@ async function insertFoodOrderAndOption(food,connection){
                             var query = connection.query(insertFoodOptionSql,food_options,function(err,results){
                                 console.log(query.sql);
                                 if(err){return connection.rollback(function(){
-                                    connection.release();
                                     return reject(err);
                                 })
                                 }
