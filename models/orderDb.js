@@ -95,7 +95,7 @@ exports.insertOrder = async function (data, callback) {
 
         const getPoolConnectionPromise = await getPoolConnection();
         const sendMessageWithFcmPromise = await sendMessageWithFcm(user_id,obj,getPoolConnectionPromise);
-        await releaseConnection(getPoolConnectionPromise);
+
         logger.log('debug','/order response : %j',commitConnectionPromise);
         callback(null,commitConnectionPromise);
 
