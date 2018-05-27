@@ -27,7 +27,8 @@ var logger = new winston.Logger({
                 datePattern:'YYYY-MM-DD',
                 json:false,
                 maxsize:1024*1024*100, //100mb
-                maxFiles:10
+                maxFiles:10,
+                zippedArchive : true
             })
     ]
 })
