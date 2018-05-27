@@ -494,8 +494,8 @@ async function insertCoffeeOrderAndOption(coffee,connection){
 async function insertFoodOrderAndOption(food,connection){
 
     return new Promise(function(resolve,reject){
-
-        if(typeof food == "undefined"){ console.log("food is undefined"); resolve(connection);}
+        console.log("food : ",food.length);
+        if(typeof food == "undefined" || food.length ==0){ console.log("food is undefined"); resolve(connection);}
         else{
             forEach(food,function(item,index,arr){
                 var insertFoodOrdersSql = "insert into food_orders(count,food_id,order_id,price) values(?,?,?,?)";
