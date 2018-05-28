@@ -19,7 +19,7 @@ router.get('/:user_id',function(req,res,next){
 
 // show orderdetail
 router.get('/detail/:order_id',function(req,res,next){
-  logger.log('debug','get /order/'+req.params.order_id);
+  logger.log('debug','get /order/detail'+req.params.order_id);
   db.getOrderDetail(req.params.order_id,function(err,success){
     if(err){next(err)}
     else{

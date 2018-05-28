@@ -11,6 +11,7 @@ var drink = require('./routes/drink');
 var food = require('./routes/food');
 var order = require('./routes/order');
 var market = require('./routes/market');
+var notice = require('./routes/notice');
 
 var loggers = require('./winston');
 
@@ -34,6 +35,7 @@ app.use('/drink',drink);
 app.use('/food',food);
 app.use('/order',order);
 app.use('/market',market);
+app.use('/notice',notice);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
