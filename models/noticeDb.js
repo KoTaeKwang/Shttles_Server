@@ -22,6 +22,22 @@ exports.getNotice = async function (data, callback) {
     }
 };
 
+exports.getNoticeDetail = async function (notice_id, callback) {
+
+    try{
+       ㅇ
+        const connection = await getPoolConnection();
+        const getNoticePromise = await getNoticebyId(connection,notice_id);
+        const responseNoticeDetailPromise = await responseNoticeDetail(getNoticePromise);
+        logger.log('debug','noticeDetail : %j',responseNoticeDetailPromise);
+        callback(null,responseNoticeDetailPromise);
+
+    }catch(e){
+        callback(e,null);
+    }
+
+};
+
 
 async function getPoolConnection(){
 
@@ -81,4 +97,48 @@ async function responseNoticeList(noticeListPromise){
 
 
     })
+}
+
+
+
+async function getNoticebyId(connection,notice_id){
+
+    return new Promise(function(resolve,reject){
+
+        var noticeLSql = "select * from notice where notice_id = ?";
+
+        connection.query(noticeLSql,notice_id,function(err,notice){
+            if(err){connection.release(); reject(err);}
+
+            connection.release();
+            resolve(notice);
+        })
+    });
+
+}
+
+async function responseNoticeDetail(notice){
+
+    return new Promise(function(resolve,reject){
+
+        var obj = [];
+
+        if(notice == null || notice.length ==0){
+            resolve(emptylist);
+        }
+
+        var objTemp = {
+            "notice_id" : notice[0].notice_id,
+            "notice_subject" : notice[0].notice_subject,
+            "notice_content" : notice[0].notice_content,
+            "notice_picturl" : notice[0].notice_picturl,
+            "notice_date" : notice[0].notice_date
+
+        }
+
+        obj.push(objTemp);
+
+        resolve(obj);
+
+    });
 }

@@ -12,5 +12,14 @@ router.get('/',function(req,res,next){
     })
 });
 
+router.get('/detail/:notice_id',function (req,res,next) {
+    logger.log('debug','get/notice/detail'+req.params.notice_id);
+    db.getNoticeDetail(req.params.notice_id,function(err,success){
+        if(err){next(err);}
+        else{
+            res.json(success);
+        }
+    })
+});
 
 module.exports = router;
