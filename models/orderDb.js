@@ -291,7 +291,8 @@ async function makeResponseOrderList(orders,coffeeList,foodList){
             "coffee" : coffeeList,
             "food" : foodList,
             "order_price" : orders.price,
-            "order_state" : orders.state
+            "order_state" : orders.state,
+            "order_date" : orders.date
         }
 
         resolve(obj);
