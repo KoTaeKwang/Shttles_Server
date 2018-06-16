@@ -25,7 +25,7 @@ exports.getNotice = async function (data, callback) {
 exports.getNoticeDetail = async function (notice_id, callback) {
 
     try{
-       
+
         const connection = await getPoolConnection();
         const getNoticePromise = await getNoticebyId(connection,notice_id);
         const responseNoticeDetailPromise = await responseNoticeDetail(getNoticePromise);

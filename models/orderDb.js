@@ -26,6 +26,7 @@ exports.getOrderList = async function(user_id,callback){
             const foodList = await getFoodListByOrderId(getOrdersPromise[index].order_id,getPoolConnectionPromise);
             const makeResponseOrderListPromise = await makeResponseOrderList(getOrdersPromise[index],coffeeList,foodList);
             console.log("Response : ",makeResponseOrderListPromise);
+            logger.log('debug','order List : %j',makeResponseOrderListPromise);
             obj.push(makeResponseOrderListPromise);
 
             if(getOrdersPromise.length -1 == index){
@@ -51,6 +52,7 @@ exports.getOrderDetail = async function(order_id,callback){
         const coffeeObj = await makeCoffeeListWithOption(coffeeList,getPoolConnectionPromise);
         const foodObj = await makeFoodListWithOption(foodList,getPoolConnectionPromise);
         const responseOrderDetail = await makeOrderDetailResponse(getOrdersByOrderIdPromise,coffeeObj,foodObj);
+        logger.log('debug','orderDetail : %j',responseOrderDetail);
         await releaseConnection(getPoolConnectionPromise);
         callback(null,responseOrderDetail);
     }catch(e){
@@ -64,27 +66,27 @@ exports.insertOrder = async function (data, callback) {
     console.log("data : " ,data);
 
     var user_id  = data.user_id;
-    var order_address =data.order_address
-    var order_totalPrice = data.order_totalPrice
+    var order_address =data.order_address;
+    var order_price = data.order_price;
     var coffee= data.coffee;
     var food = data.food;
 
 
     console.log("userId :" , user_id);
     console.log("address : ",order_address);
-    console.log("totalPrice : ",order_totalPrice);
+    console.log("price : ",order_price);
     console.log("Coffee : ",coffee);
     console.log("food : " ,food);
 
     var obj = {
         "userId" : user_id,
         "address" : order_address,
-        "totalPrice" : order_totalPrice,
+        "price" : order_price,
         "coffee" : coffee,
         "food" : food
     }
 
-    logger.log('debug','/order request -> userId : '+user_id+', address : '+order_address+', totalPrice : '+order_totalPrice+', coffee : '+coffee+', food : '+food);
+    logger.log('debug','/order request -> userId : '+user_id+', address : '+order_address+', price : '+order_price+', coffee : '+coffee+', food : '+food);
 
     try{
         const beginTransactionPromise = await beginTransaction();
@@ -123,14 +125,21 @@ async function releaseConnection(connection){
 
     return new Promise(function (resolve,reject) {
         var obj = [];
-        connection.release();
-        resolve(obj);
+        try{
+            connection.release();
+        }catch (e) {
+            reject(e);
+        }finally {
+            resolve(obj);
+        }
+
+
     })
 }
 
 
 async function sendMessageWithFcmTest(orderInfo){
-
+    logger.log('debug','sendMessageWithFcmTest');
     return new Promise(function (resolve,reject) {
 
             var push_token = "dqN_1asEQks:APA91bH_BzKTvYPfuP6wqWmrC4iUPv0Nn5fFxzmJbE9-2YJ0fRhevcXxEsdqX6VjkkUSTmlBIdsih7AeN35hP-h7XQDiG8lm0vLt6XzW9Yy3ZGR2EvvEOKuMPuMEUyFgbKz_xmKUvXjG";
@@ -160,7 +169,7 @@ async function sendMessageWithFcmTest(orderInfo){
 }
 
 async function sendMessageWithFcm(user_id,orderInfo,connection){
-
+    logger.log('debug','sendMessageWithFcm');
     return new Promise(function (resolve,reject) {
 
         var getPushIdSql = "select pushId from user where user_id = ?";
@@ -201,6 +210,7 @@ async function sendMessageWithFcm(user_id,orderInfo,connection){
 }
 
 async function getPoolConnection(){
+    logger.log('debug','getPoolConnection');
     return new Promise(function(resolve,reject){
 
         pool.getConnection(function (err,connection) {
@@ -218,7 +228,7 @@ async function getPoolConnection(){
 }
 
 async function getOrders(user_id, connection){
-
+    logger.log('debug','getOrders');
     return new Promise(function (resolve,reject) {
 
         var getOrdersSql = "select * from orders where user_id = ?"
@@ -237,7 +247,7 @@ async function getOrders(user_id, connection){
 }
 
 async function getCoffeeListByOrderId(orders_id,connection){
-
+    logger.log('debug','getCoffeeListByOrderId');
     return new Promise(function (resolve,reject) {
 
         var getCoffeeListByOrderIdSql = "select co.coffee_ordersId,co.count, c.name, co.price from coffee_orders AS co JOIN coffee AS c on co.coffee_id = c.coffee_id where order_id = ?"
@@ -255,7 +265,7 @@ async function getCoffeeListByOrderId(orders_id,connection){
 }
 
 async function getFoodListByOrderId(orders_id,connection){
-
+    logger.log('debug','getFoodListbyOrderId');
     return new Promise(function (resolve,reject) {
 
         var getFoodListByOrderIdSql = "select fo.food_ordersId,fo.count, f.name, fo.price from food_orders AS fo JOIN food AS f on fo.food_id = f.food_id where order_id = ?"
@@ -273,7 +283,7 @@ async function getFoodListByOrderId(orders_id,connection){
 }
 
 async function makeResponseOrderList(orders,coffeeList,foodList){
-
+    logger.log('debug','makeResponseOrderList');
     return new Promise(function (resolve,reject) {
 
         var obj ={
@@ -290,7 +300,7 @@ async function makeResponseOrderList(orders,coffeeList,foodList){
 }
 
 async function getOrdersByOrderId(order_id,connection){
-
+    logger.log('debug','getOrdersByOrderId);
     return new Promise(function (resolve,reject) {
 
         var getOrdersSql = "select * from orders where order_id = ?";
@@ -308,11 +318,11 @@ async function getOrdersByOrderId(order_id,connection){
 }
 
 async function makeCoffeeListWithOption(coffeeList,connection){
-
+    logger.log('debug','makeCoffeeListWithOption');
     return new Promise(function(resolve,reject){
         var obj = [];
 
-        var getCoffeeOptionList = "select co.name from coffeeOption_orders AS coo JOIN coffee_option AS  co ON coo.option_id = co.option_id where coffee_ordersId = ?"
+        var getCoffeeOptionList = "select co.name as option_name from coffeeOption_orders AS coo JOIN coffee_option AS  co ON coo.option_id = co.option_id where coffee_ordersId = ?"
 
         forEach(coffeeList, async function(item,index,arr){
 
@@ -342,13 +352,13 @@ async function makeCoffeeListWithOption(coffeeList,connection){
 }
 
 async function makeFoodListWithOption(foodList,connection){
-
+    logger.log('debug','makeFoodListWithOption');
     return new Promise(function(resolve,reject){
         var obj = [];
 
         if(foodList.length == 0){resolve(obj)}
 
-        var getFoodOptionList = "select fo.name from foodOption_orders AS foo JOIN food_option AS  fo ON foo.option_id = fo.option_id where food_ordersId = ?"
+        var getFoodOptionList = "select fo.name as option_name from foodOption_orders AS foo JOIN food_option AS  fo ON foo.option_id = fo.option_id where food_ordersId = ?"
 
         forEach(foodList, async function(item,index,arr){
 
@@ -377,7 +387,7 @@ async function makeFoodListWithOption(foodList,connection){
 }
 
 async function makeOrderDetailResponse(orders,coffeeObj,foodObj){
-
+    logger.log('debug','makeOrderDetailResponse');
     return new Promise(function(resolve,reject){
         console.log("orders : ",orders);
         var obj ={
@@ -394,7 +404,7 @@ async function makeOrderDetailResponse(orders,coffeeObj,foodObj){
 }
 
 async function beginTransaction(){
-
+    logger.log('debug','beginTransaction');
     return new Promise(function(resolve,reject){
 
         pool.getConnection(function(err,connection){
@@ -412,17 +422,17 @@ async function beginTransaction(){
 }
 
 async function insertOrder(data, connection){
-
+    logger.log('debug','insertOrder');
     return new Promise(function(resolve,reject){
 
         var user_id  = data.user_id;
-        var order_address =data.order_address
-        var order_totalPrice = data.order_totalPrice
+        var order_address =data.order_address;
+        var order_price = data.order_price;
 
         var addOrdersSql = "insert into orders(state,address,price,user_id) values(?,?,?,?)";
 
         var orders = [
-            0, order_address, order_totalPrice,user_id
+            0, order_address, order_price,user_id
         ]
 
         console.log("orders : ",orders);
@@ -441,7 +451,7 @@ async function insertOrder(data, connection){
 }
 
 async function insertCoffeeOrderAndOption(coffee,connection){
-
+    logger.log('debug','insertCoffeeOrderAndOption');
     return new Promise(function (resolve,reject) {
 
         forEach(coffee,function(item,index,arr){
@@ -492,7 +502,7 @@ async function insertCoffeeOrderAndOption(coffee,connection){
 }
 
 async function insertFoodOrderAndOption(food,connection){
-
+    logger.log('debug','insertFoodOrderAndOption');
     return new Promise(function(resolve,reject){
 
         if(typeof food == "undefined" || food.length ==0){ console.log("food is undefined"); resolve(connection);}
@@ -549,6 +559,7 @@ async function insertFoodOrderAndOption(food,connection){
 }
 
 async function commitConnection(connection){
+    logger.log('debug','commitConnection');
     return new Promise(function (resolve,reject) {
 
         connection.commit(function(err){
