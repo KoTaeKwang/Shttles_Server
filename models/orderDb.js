@@ -396,6 +396,7 @@ async function makeOrderDetailResponse(orders,coffeeObj,foodObj){
             "order_date" : orders[0].date,
             "order_state" : orders[0].state,
             "order_address" : orders[0].address,
+            "order_price" : orders[0].price,
             "coffee" : coffeeObj,
             "food" : foodObj
         }
