@@ -38,7 +38,7 @@ router.post('/orders/verify',function(req,res,next){
     db.postAdminOrderVerify(req.body,function(err,success){
         if(err){next(err)}
         else{
-            logger.log('debug','get admin/orders/verify/'+req.body+'  response : %j',success);
+            logger.log('debug','get admin/orders/verify response : %j',success);
             res.json(success);
         }
     })
