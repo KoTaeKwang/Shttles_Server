@@ -300,7 +300,7 @@ async function makeResponseOrderList(orders,coffeeList,foodList){
 }
 
 async function getOrdersByOrderId(order_id,connection){
-    logger.log('debug','getOrdersByOrderId);
+    logger.log('debug','getOrdersByOrderId');
     return new Promise(function (resolve,reject) {
 
         var getOrdersSql = "select * from orders where order_id = ?";
