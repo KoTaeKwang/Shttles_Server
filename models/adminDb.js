@@ -87,6 +87,8 @@ async function updateOrderState(order_id,verify,connection){
             state =2;
         }else if(verify == "receive"){
             state =1;
+        }else if(verify == "ready"){
+            state =0;
         }else{
             var e = new Error("type is not defined");
             reject(e);
