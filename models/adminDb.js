@@ -1,22 +1,17 @@
-
 var forEach = require('async-foreach').forEach;
-var async = require('async');
-var HashMap = require('hashmap');
 var logger = require('../winston');
-var fcm = require('../fcm');
 var pool = require('../mysql');
+var Promise = require('promise');
 
-var emptyResult = [{"result":"empty"}]
-var order_id;
+var emptyResult = [{"result":"empty"}];
 
 
-
-exports.getOrderList = async function(user_id,callback){
+exports.getAdminOrderList = async function(req,callback){
     var obj =[];
 
     try{
         const getPoolConnectionPromise = await getPoolConnection();
-        const getOrdersPromise = await getOrders(user_id,getPoolConnectionPromise);
+        const getOrdersPromise = await getAdminOrders(getPoolConnectionPromise);
         if(getOrdersPromise.length ==0){
             return callback(null,emptyResult)
         }
@@ -26,7 +21,7 @@ exports.getOrderList = async function(user_id,callback){
             const foodList = await getFoodListByOrderId(getOrdersPromise[index].order_id,getPoolConnectionPromise);
             const makeResponseOrderListPromise = await makeResponseOrderList(getOrdersPromise[index],coffeeList,foodList);
             console.log("Response : ",makeResponseOrderListPromise);
-            logger.log('debug','order List : %j',makeResponseOrderListPromise);
+            logger.log('debug','admin order List : %j',makeResponseOrderListPromise);
             obj.push(makeResponseOrderListPromise);
 
             if(getOrdersPromise.length -1 == index){
@@ -42,7 +37,7 @@ exports.getOrderList = async function(user_id,callback){
 }
 
 
-exports.getOrderDetail = async function(order_id,callback){
+exports.getAdminOrderDetail = async function(order_id,callback){
 
     try{
         const getPoolConnectionPromise = await getPoolConnection();
@@ -62,64 +57,62 @@ exports.getOrderDetail = async function(order_id,callback){
 }
 
 
-exports.insertOrder = async function (data, callback) {
-    console.log("data : " ,data);
-
-    var user_id  = data.user_id;
-    var order_address =data.order_address;
-    var order_price = data.order_price;
-    var coffee= data.coffee;
-    var food = data.food;
-
-
-    console.log("userId :" , user_id);
-    console.log("address : ",order_address);
-    console.log("price : ",order_price);
-    console.log("Coffee : ",coffee);
-    console.log("food : " ,food);
-
-    var obj = {
-        "userId" : user_id,
-        "address" : order_address,
-        "price" : order_price,
-        "coffee" : coffee,
-        "food" : food
-    }
-
-    logger.log('debug','/order request -> userId : '+user_id+', address : '+order_address+', price : '+order_price+', coffee : '+coffee+', food : '+food);
+exports.postAdminOrderVerify = async function(body,callback){
 
     try{
-        const beginTransactionPromise = await beginTransaction();
-        const insertOrderPromise = await insertOrder(data,beginTransactionPromise);
-        const insertCoffeeOrderAndOptionPromise = await insertCoffeeOrderAndOption(coffee,insertOrderPromise);
-        const insertFoodOrderAndOptionPromise = await insertFoodOrderAndOption(food,insertCoffeeOrderAndOptionPromise);
-        const commitConnectionPromise = await commitConnection(insertFoodOrderAndOptionPromise);
-
+        var results ={"result" : "success"};
+        var verify = body.verify;
+        var order_id = body.order_id;
+        console.log("verify : ",verify);
+        console.log("order_id : ",order_id);
         const getPoolConnectionPromise = await getPoolConnection();
-        const sendMessageWithFcmPromise = await sendMessageWithFcm(user_id,obj,getPoolConnectionPromise);
-
-        logger.log('debug','/order response : %j',commitConnectionPromise);
-        callback(null,commitConnectionPromise);
-
-    }catch(e){
-        callback(e,null);
-    }
-
-
-}
-
-exports.test = async function (data,callback){
-
-    var obj = "shuttles gogogogogogo letgogogogo";
-    var results = {"success" : "ok"};
-
-    try{
-        const sendMessageWithFcmPromise = await sendMessageWithFcmTest(obj);
+        const updateState = await updateOrderState(order_id,verify,getPoolConnectionPromise);
         callback(null,results);
+
     }catch (e) {
         callback(e,null);
     }
+
 }
+
+
+async function updateOrderState(order_id,verify,connection){
+    logger.log('debug','updateOrderState');
+    return new Promise(function(resolve,reject){
+        var updateOrderStateSql;
+        var state;
+
+
+        if(verify == "cancel"){
+            state =2;
+        }else if(verify == "receive"){
+            state =1;
+        }else{
+            var e = new Error("type is not defined");
+            reject(e);
+        }
+        updateOrderStateSql = "UPDATE orders SET state = ? where order_id = ?";
+
+        var updateState=[
+            state,order_id
+        ]
+
+
+        var query = connection.query(updateOrderStateSql,updateState,function(err,results){
+            logger.log('debug','query : '+query.sql);
+            if(err){return connection.rollback(function(){
+                connection.release();
+                return reject(err);
+                })
+            };
+            connection.release();
+            resolve(connection);
+        })
+
+    })
+}
+
+
 
 async function releaseConnection(connection){
 
@@ -142,28 +135,28 @@ async function sendMessageWithFcmTest(orderInfo){
     logger.log('debug','sendMessageWithFcmTest');
     return new Promise(function (resolve,reject) {
 
-            var push_token = "dqN_1asEQks:APA91bH_BzKTvYPfuP6wqWmrC4iUPv0Nn5fFxzmJbE9-2YJ0fRhevcXxEsdqX6VjkkUSTmlBIdsih7AeN35hP-h7XQDiG8lm0vLt6XzW9Yy3ZGR2EvvEOKuMPuMEUyFgbKz_xmKUvXjG";
+        var push_token = "dqN_1asEQks:APA91bH_BzKTvYPfuP6wqWmrC4iUPv0Nn5fFxzmJbE9-2YJ0fRhevcXxEsdqX6VjkkUSTmlBIdsih7AeN35hP-h7XQDiG8lm0vLt6XzW9Yy3ZGR2EvvEOKuMPuMEUyFgbKz_xmKUvXjG";
 
-            var message ={
-                to : push_token,
-                notification : {
-                    title : "shuttles Order",
-                    body : orderInfo
-                }
+        var message ={
+            to : push_token,
+            notification : {
+                title : "shuttles Order",
+                body : orderInfo
+            }
+        }
+
+        console.log("fcm###",fcm);
+
+        fcm.send(message,function (err,response) {
+            if(err){
+                logger.log('error','FCM send fail : '+err);
+                reject(err);
+            }else{
+                logger.log('debug','FCM send success');
+                resolve(response);
             }
 
-            console.log("fcm###",fcm);
-
-            fcm.send(message,function (err,response) {
-                if(err){
-                    logger.log('error','FCM send fail : '+err);
-                    reject(err);
-                }else{
-                    logger.log('debug','FCM send success');
-                    resolve(response);
-                }
-
-            })
+        })
 
     })
 }
@@ -201,7 +194,7 @@ async function sendMessageWithFcm(user_id,orderInfo,connection){
                     logger.log('debug','FCM send success');
                     resolve(response);
                 }
-                
+
             })
 
         })
@@ -227,13 +220,13 @@ async function getPoolConnection(){
     })
 }
 
-async function getOrders(user_id, connection){
-    logger.log('debug','getOrders');
+async function getAdminOrders(connection){
+    logger.log('debug','getAdminOrders');
     return new Promise(function (resolve,reject) {
 
-        var getOrdersSql = "select * from orders where user_id = ? order by date DESC"
+        var getOrdersSql = "select * from orders order by date DESC"
 
-        connection.query(getOrdersSql,user_id,function(err,orderList){
+        connection.query(getOrdersSql,function(err,orderList){
             if(err){
                 logger.log('error', 'connection error' + err);
                 connection.release();
@@ -292,7 +285,8 @@ async function makeResponseOrderList(orders,coffeeList,foodList){
             "food" : foodList,
             "order_price" : orders.price,
             "order_state" : orders.state,
-            "order_date" : orders.date
+            "order_date" : orders.date,
+            "order_userId" : orders.user_id
         }
 
         resolve(obj);
@@ -397,183 +391,11 @@ async function makeOrderDetailResponse(orders,coffeeObj,foodObj){
             "order_state" : orders[0].state,
             "order_address" : orders[0].address,
             "order_price" : orders[0].price,
+            "order_userId" : orders[0].user_id,
             "coffee" : coffeeObj,
             "food" : foodObj
         }
         resolve(obj);
     })
 
-}
-
-async function beginTransaction(){
-    logger.log('debug','beginTransaction');
-    return new Promise(function(resolve,reject){
-
-        pool.getConnection(function(err,connection){
-            if(err){connection.release(); return reject(err);}
-
-            connection.beginTransaction(function(err){
-                if(err){connection.release(); return reject(err);}
-
-                resolve(connection);
-
-            })
-
-        })
-    })
-}
-
-async function insertOrder(data, connection){
-    logger.log('debug','insertOrder');
-    return new Promise(function(resolve,reject){
-
-        var user_id  = data.user_id;
-        var order_address =data.order_address;
-        var order_price = data.order_price;
-
-        var addOrdersSql = "insert into orders(state,address,price,user_id) values(?,?,?,?)";
-
-        var orders = [
-            0, order_address, order_price,user_id
-        ]
-
-        console.log("orders : ",orders);
-
-        var query = connection.query(addOrdersSql,orders,function(err,results){
-            console.log(query.sql);
-            if(err){return connection.rollback(function(){
-                connection.release();
-                return reject(err);
-            })
-            }
-            order_id = results.insertId;
-            resolve(connection);
-        })
-    })
-}
-
-async function insertCoffeeOrderAndOption(coffee,connection){
-    logger.log('debug','insertCoffeeOrderAndOption');
-    return new Promise(function (resolve,reject) {
-
-        forEach(coffee,function(item,index,arr){
-            var insertCoffeeOrdersSql = "insert into coffee_orders(count,coffee_id,order_id,price) values(?,?,?,?)";
-
-            var coffee_orders = [
-                coffee[index].count, coffee[index].coffee_id, order_id , coffee[index].price
-            ]
-
-            console.log("coffee_orders " , coffee_orders);
-
-            var query = connection.query(insertCoffeeOrdersSql,coffee_orders,function(err,results){
-                console.log(query.sql);
-                if(err){return connection.rollback(function(){
-                    reject(err);
-                })
-                }
-
-                var coffee_ordersId = results.insertId;
-
-                if(typeof coffee[index].option == "undefined"){
-                    console.log("coffee is undefined");
-                }
-                else{
-                    forEach(coffee[index].option,function(item,optionIndex,arr){
-                        var insertCoffeeOptionSql = "insert into coffeeOption_orders(coffee_ordersId,option_id) values(?,?)";
-
-                        var coffee_options = [coffee_ordersId,coffee[index].option[optionIndex].option_id];
-
-                        var query = connection.query(insertCoffeeOptionSql,coffee_options,function(err,results){
-                            console.log(query.sql);
-                            if(err){return connection.rollback(function(){
-                                reject(err);
-                            })
-                            }
-
-                        })
-                    })
-
-                }
-
-            })
-            if(coffee.length-1 == index)
-                resolve(connection);
-        })
-
-    })
-}
-
-async function insertFoodOrderAndOption(food,connection){
-    logger.log('debug','insertFoodOrderAndOption');
-    return new Promise(function(resolve,reject){
-
-        if(typeof food == "undefined" || food.length ==0){ console.log("food is undefined"); resolve(connection);}
-        else{
-            forEach(food,function(item,index,arr){
-                var insertFoodOrdersSql = "insert into food_orders(count,food_id,order_id,price) values(?,?,?,?)";
-
-                var food_orders = [
-                    food[index].count, food[index].food_id, order_id , food[index].price
-                ]
-
-                console.log("food_orders " , food_orders);
-
-                var query = connection.query(insertFoodOrdersSql,food_orders,function(err,results){
-                    console.log(query.sql);
-
-                    if(err){return connection.rollback(function(){
-                        return reject(err);
-                    })
-                    }
-
-                    var food_ordersId = results.insertId;
-
-
-                    if(typeof food[index].option == "undefined"){
-                        console.log("food option is undefined");
-                    }
-                    else{
-                        forEach(food[index].option,function(item,optionIndex,arr){
-
-                            var insertFoodOptionSql = "insert into foodOption_orders(food_ordersId,option_id) values(?,?)";
-
-                            var food_options = [food_ordersId,food[index].option[optionIndex].option_id];
-
-                            var query = connection.query(insertFoodOptionSql,food_options,function(err,results){
-                                console.log(query.sql);
-                                if(err){return connection.rollback(function(){
-                                    return reject(err);
-                                })
-                                }
-
-                            })
-                        })
-
-                    }
-                })
-
-                if(food.length-1 == index)
-                    resolve(connection);
-            })
-        }
-
-    })
-}
-
-async function commitConnection(connection){
-    logger.log('debug','commitConnection');
-    return new Promise(function (resolve,reject) {
-
-        connection.commit(function(err){
-            if(err){
-                return connection.rollback(function(){
-                    connection.release();
-                    return reject(err);
-                })
-            }
-        });
-        var obj =[{"result" : "success"}];
-        resolve(obj);
-
-    })
 }
