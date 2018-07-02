@@ -70,11 +70,13 @@ exports.insertOrder = async function (data, callback) {
     var order_price = data.order_price;
     var coffee= data.coffee;
     var food = data.food;
+    var order_content = data.order_content;
 
 
     console.log("userId :" , user_id);
     console.log("address : ",order_address);
     console.log("price : ",order_price);
+    console.log("content : ",order_content);
     console.log("Coffee : ",coffee);
     console.log("food : " ,food);
 
@@ -397,6 +399,7 @@ async function makeOrderDetailResponse(orders,coffeeObj,foodObj){
             "order_state" : orders[0].state,
             "order_address" : orders[0].address,
             "order_price" : orders[0].price,
+            "order_content" : orders[0].content,
             "coffee" : coffeeObj,
             "food" : foodObj
         }
@@ -430,11 +433,12 @@ async function insertOrder(data, connection){
         var user_id  = data.user_id;
         var order_address =data.order_address;
         var order_price = data.order_price;
+        var order_content = data.order_content;
 
-        var addOrdersSql = "insert into orders(state,address,price,user_id) values(?,?,?,?)";
+        var addOrdersSql = "insert into orders(state,address,price,content,user_id) values(?,?,?,?,?)";
 
         var orders = [
-            0, order_address, order_price,user_id
+            0, order_address, order_price, order_content,user_id
         ]
 
         console.log("orders : ",orders);
