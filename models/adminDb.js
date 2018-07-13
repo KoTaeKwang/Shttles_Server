@@ -66,13 +66,57 @@ exports.postAdminOrderVerify = async function(body,callback){
         console.log("verify : ",verify);
         console.log("order_id : ",order_id);
         const getPoolConnectionPromise = await getPoolConnection();
-        const updateState = await updateOrderState(order_id,verify,getPoolConnectionPromise);
+        const updateStatePromise = await updateOrderState(order_id,verify,getPoolConnectionPromise);
+        const sendMessageWithFcmPromise = await sendMessageWithFcmForAdmin(order_id,verify,updateStatePromise);
+
         callback(null,results);
 
     }catch (e) {
         callback(e,null);
     }
 
+}
+
+async function sendMessageWithFcmForAdmin(order_id,verify,connection){
+    logger.log('debug','sendMessageWithFcmForAdmin');
+    return new Promise(function (resolve,reject) {
+
+        var getPushIdSql = "select u.pushId from user AS u JOIN orders AS o ON u.user_id = o.user_id where order_id = ?";
+
+        connection.query(getPushIdSql,order_id,function(err,pushId){
+
+            if(err){
+                logger.log('error', 'connection error' + err);
+                connection.release();
+                reject(err);
+            }
+            connection.release();
+
+            var push_token = pushId[0].pushId;
+
+            var message ={
+                to : push_token,
+                notification : {
+                    title : "shuttles Order",
+                    body : verify
+                }
+            }
+
+
+            fcm.send(message,function (err,response) {
+                if(err){
+                    logger.log('error','FCM send fail : '+err);
+                    reject(err);
+                }else{
+                    logger.log('debug','FCM send success');
+                    resolve(response);
+                }
+
+            })
+
+        })
+
+    })
 }
 
 
@@ -107,7 +151,6 @@ async function updateOrderState(order_id,verify,connection){
                 return reject(err);
                 })
             };
-            connection.release();
             resolve(connection);
         })
 
