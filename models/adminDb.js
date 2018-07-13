@@ -2,6 +2,7 @@ var forEach = require('async-foreach').forEach;
 var logger = require('../winston');
 var pool = require('../mysql');
 var Promise = require('promise');
+var fcm = require('../fcm');
 
 var emptyResult = [{"result":"empty"}];
 
