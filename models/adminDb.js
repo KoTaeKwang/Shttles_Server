@@ -84,6 +84,24 @@ async function sendMessageWithFcmForAdmin(order_id,verify,connection){
 
         var getPushIdSql = "select u.pushId from user AS u JOIN orders AS o ON u.user_id = o.user_id where order_id = ?";
 
+        var subject;
+        var type;
+
+
+        if(verify == "cancel"){
+            subject = "주문이 취소되었습니다.";
+            type = "order_cancel";
+        }else if(verify == "receive"){
+            subject = "주문 완료되었습니다.";
+            type = "order_accept";
+        }
+
+        var obj = {
+            "subject" : subject,
+            "type" : type
+        }
+
+
         connection.query(getPushIdSql,order_id,function(err,pushId){
 
             if(err){
@@ -99,7 +117,7 @@ async function sendMessageWithFcmForAdmin(order_id,verify,connection){
                 to : push_token,
                 notification : {
                     title : "shuttles Order",
-                    body : verify
+                    body : obj
                 }
             }
 

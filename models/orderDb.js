@@ -81,11 +81,8 @@ exports.insertOrder = async function (data, callback) {
     console.log("food : " ,food);
 
     var obj = {
-        "userId" : user_id,
-        "address" : order_address,
-        "price" : order_price,
-        "coffee" : coffee,
-        "food" : food
+        "subject" : "주문 진행중입니다.",
+        "type" : "order_complete"
     }
 
     logger.log('debug','/order request -> userId : '+user_id+', address : '+order_address+', price : '+order_price+', coffee : '+coffee+', food : '+food);
