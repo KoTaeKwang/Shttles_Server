@@ -84,7 +84,7 @@ async function responseNoticeList(noticeListPromise){
                 "notice_id" : noticeListPromise[index].notice_id,
                 "notice_subject" : noticeListPromise[index].notice_subject,
                 "notice_date" : noticeListPromise[index].notice_date,
-                "notice_picturl" : noticeListPromise[index].notice_picturl,
+                "notice_picture" : noticeListPromise[index].notice_picture,
                 "notice_content" : noticeListPromise[index].notice_content
 
             }
@@ -133,7 +133,7 @@ async function responseNoticeDetail(notice){
             "notice_id" : notice[0].notice_id,
             "notice_subject" : notice[0].notice_subject,
             "notice_content" : notice[0].notice_content,
-            "notice_picturl" : notice[0].notice_picturl,
+            "notice_picture" : notice[0].notice_picture,
             "notice_date" : notice[0].notice_date
 
         }
