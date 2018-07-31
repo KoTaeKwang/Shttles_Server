@@ -83,7 +83,9 @@ async function responseNoticeList(noticeListPromise){
             var objTemp = {
                 "notice_id" : noticeListPromise[index].notice_id,
                 "notice_subject" : noticeListPromise[index].notice_subject,
-                "notice_date" : noticeListPromise[index].notice_date
+                "notice_date" : noticeListPromise[index].notice_date,
+                "notice_picturl" : noticeListPromise[index].notice_picturl,
+                "notice_content" : noticeListPromise[index].notice_content
 
             }
 
