@@ -39,6 +39,7 @@ exports.getNoticeDetail = async function (notice_id, callback) {
 };
 
 
+
 async function getPoolConnection(){
 
     return new Promise(function(resolve,reject){
@@ -100,8 +101,6 @@ async function responseNoticeList(noticeListPromise){
 
     })
 }
-
-
 
 async function getNoticebyId(connection,notice_id){
 

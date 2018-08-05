@@ -68,8 +68,10 @@ exports.postAdminOrderVerify = async function(body,callback){
         console.log("order_id : ",order_id);
         const getPoolConnectionPromise = await getPoolConnection();
         const updateStatePromise = await updateOrderState(order_id,verify,getPoolConnectionPromise);
-        const sendMessageWithFcmPromise = await sendMessageWithFcmForAdmin(order_id,verify,updateStatePromise);
 
+        if(verify != "ready"){
+            const sendMessageWithFcmPromise = await sendMessageWithFcmForAdmin(order_id,verify,updateStatePromise);
+        }
         callback(null,results);
 
     }catch (e) {
