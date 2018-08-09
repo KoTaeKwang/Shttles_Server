@@ -6,12 +6,23 @@ var logger = require('../winston');
 
 router.get('/list/:market_id',function(req,res,next){
     logger.log('debug','get /food/list/'+req.params.market_id);
-    db.getFoodList(req.params.market_id,function(err,success){
+    db.getFoodListByMarket(req.params.market_id,function(err,success){
         if(err){ next(err);}
         else{
         res.json(success);}
     })
 })
+
+
+router.get('/list',function(req,res,next){
+    logger.log('debug','get /food/list');
+    db.getFoodList(req,function(err,success){
+        if(err){ next(err);}
+        else{
+            res.json(success);}
+    })
+})
+
 
 
 router.get('/:food_id',function(req,res,next){
@@ -34,3 +45,4 @@ router.post('/insertFood',function(req,res,next){
 })
 
 module.exports = router;
+

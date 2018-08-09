@@ -29,12 +29,26 @@ exports.insertFood = function(data,callback){
 }
 
 
-exports.getFoodList = async function(market_id,callback){
+exports.getFoodListByMarket = async function(market_id,callback){
 
     try{
-        const getFoodListPromise = await getFoodList(market_id);
-        const responseFoodListPromise = await responseFoodList(getFoodListPromise);
+        const getFoodListPromise = await getFoodListWithMarketId(market_id);
+        const responseFoodListPromise = await responseFoodListWithMarket(getFoodListPromise);
         logger.log('debug','/food/list/'+market_id+' response : %j',responseFoodListPromise);
+        callback(null,responseFoodListPromise);
+
+    }catch(e){
+        callback(e,null);
+    }
+
+}
+
+exports.getFoodList = async function(data,callback){
+
+    try{
+        const getFoodListPromise = await getFoodList();
+        const responseFoodListPromise = await responseFoodList(getFoodListPromise);
+        logger.log('debug','/food/list response : %j',responseFoodListPromise);
         callback(null,responseFoodListPromise);
 
     }catch(e){
@@ -61,7 +75,7 @@ exports.getFoodOption = async function(food_id,callback){
 
 
 
-async function getFoodList(market_id){
+async function getFoodListWithMarketId(market_id){
 
     return new Promise(function(resolve,reject){
         var foodListSql = "Select food_id,name,price,picture_url,description from food where market_id = ?";
@@ -78,7 +92,48 @@ async function getFoodList(market_id){
 
 }
 
+async function getFoodList(){
+
+    return new Promise(function(resolve,reject){
+        var foodListSql = "select f.food_id, f.name, f.price, f.picture_url, f.picture_version, f.description, m.market_name  from food AS f JOIN market AS m ON f.market_id = m.market_id;";
+        pool.getConnection(function(err,connection){
+            if(err){ connection.release(); return reject(err);}
+
+            connection.query(foodListSql,function(err,foodList){
+                connection.release();
+                resolve(foodList)
+            })
+        })
+
+    })
+
+}
+
 async function responseFoodList(foodList){
+    var obj = [];
+    return new Promise(function(resolve,reject){
+        if(foodList == null || foodList.length==0) return resolve(emptyResult);
+
+        forEach(foodList,function(item,index,arr){
+            var objTemp = {
+                "food_id" : foodList[index].food_id,
+                "name" : foodList[index].name,
+                "price" : foodList[index].price,
+                "picture_url" : foodList[index].picture_url,
+                "picture_version" : foodList[index].picture_version,
+                "description" : foodList[index].description,
+                "state" : foodList[index].market_name
+            }
+
+            obj.push(objTemp);
+
+            if(index== foodList.length-1)
+                resolve(obj);
+        })
+    })
+}
+
+async function responseFoodListWithMarket(foodList){
     var obj = [];
     return new Promise(function(resolve,reject){
         if(foodList == null || foodList.length==0) return resolve(emptyResult);
