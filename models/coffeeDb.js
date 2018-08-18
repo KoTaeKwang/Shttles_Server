@@ -88,7 +88,7 @@ async function getCoffeeList() {
 
     return new Promise(function(resolve,reject){
 
-        var coffeeListSql = "select coffee.coffee_id, coffee.name, coffee.picture_url, coffee.description, coffee.picture_version, coffee_size.price , coffee_state.name as state\n" +
+        var coffeeListSql = "select coffee.coffee_id, coffee.name, coffee.picture_url, coffee.description, coffee.today_menu, coffee.picture_version, coffee_size.price , coffee_size.today_price, coffee_state.name as state\n" +
             " from coffee as coffee  inner join coffee_size as coffee_size on coffee.coffee_id = coffee_size.coffee_id inner join coffee_state as coffee_state on coffee.coffee_id = coffee_state.coffee_id;"
         pool.getConnection(function (err, connection) {
             if (err) {
@@ -123,13 +123,20 @@ async function responseCoffeeList(coffeeList){
         console.log("response",coffeeList)
         forEach(coffeeList,function(item,index,arr){
 
+            var price;
+            if(coffeeList[index].today_menu){
+                price = coffeeList[index].today_price;
+            }else{
+                price = coffeeList[index].price;
+            }
+
             var objTemp = {
                 "coffee_id" : coffeeList[index].coffee_id,
                 "name" : coffeeList[index].name,
                 "picture_url" : coffeeList[index].picture_url,
                 "picture_version" : coffeeList[index].picture_version,
                 "description" : coffeeList[index].description,
-                "price" : coffeeList[index].price,
+                "price" : price,
                 "state" : coffeeList[index].state
             }
 
