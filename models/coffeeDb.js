@@ -189,7 +189,8 @@ async function getCoffeeTodayMenu(){
     return new Promise(function(resolve,reject){
 
         pool.getConnection(function(err,connection){
-            var coffeeTodayMenuSql = "SELECT t.coffee_id, t.price, c.name,c.picture_url,c.picture_version,c.description from todayDrinkMenu AS t JOIN coffee AS c ON t.coffee_id = c.coffee_id";
+            var coffeeTodayMenuSql = "SELECT c.coffee_id, cs.today_price, c.name,c.picture_url,c.picture_version,c.description " +
+                "from coffee_size AS cs JOIN coffee AS c ON cs.coffee_id = c.coffee_id where c.today_menu = 1";
 
             connection.query(coffeeTodayMenuSql,function(err,coffeeTodayMenu){
                 connection.release();
@@ -215,7 +216,7 @@ async function responseCoffeeTodayMenu(coffeeTodayMenu){
             var objTemp = {
                 "coffee_id" : coffeeTodayMenu[index].coffee_id,
                 "name" : coffeeTodayMenu[index].name,
-                "price" : coffeeTodayMenu[index].price,
+                "price" : coffeeTodayMenu[index].today_price,
                 "picture_url" : coffeeTodayMenu[index].picture_url,
                 "version" : coffeeTodayMenu[index].picture_version,
                 "description" : coffeeTodayMenu[index].description
