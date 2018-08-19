@@ -343,7 +343,7 @@ async function insertCoffeeMyMenu(user_id,coffee_id){
                 connection.release();
 
                 if(err) return reject(err);
-                var obj ={"success" : "ok"};
+                var obj ={"result" : "success"};
                 resolve(obj);
 
             })
