@@ -76,13 +76,30 @@ exports.getCoffeeMyMenu = async function(user_id,callback){
     try{
         const getCoffeeIdsPromise = await getCoffeeIdsbyUserID(user_id);
         const responseCoffeeMyMenuPromise = await getCoffeeDetailbyCoffeeIds(getCoffeeIdsPromise);
-        logger.log('debug','/drink/myMenu response : %j',responseCoffeeMyMenuPromise);
+        logger.log('debug','GET /drink/myMenu response : %j',responseCoffeeMyMenuPromise);
         callback(null,responseCoffeeMyMenuPromise);
 
     }catch(e){
         callback(e,null);
     }
 };
+
+exports.addCoffeeMyMenu = async function(data,callback){
+
+    var user_id = data.user_id;
+    var coffee_id = data.coffee_id;
+
+    try{
+
+        const insertCoffeeMyMenuPromise = await insertCoffeeMyMenu(user_id,coffee_id);
+        logger.log('debug','POST /drink/myMenu response : %j',insertCoffeeMyMenuPromise);
+        callback(null,insertCoffeeMyMenuPromise);
+
+    }catch (e) {
+        callback(e,null);
+    }
+
+}
 
 async function getCoffeeList() {
 
@@ -273,6 +290,7 @@ async function getCoffeeIdsbyUserID(user_id){
 }
 
 async function getCoffeeDetailbyCoffeeIds(coffeeIds){
+    var obj = [];
 
     return new Promise(function(resolve,reject){
 
@@ -305,6 +323,29 @@ async function getCoffeeDetailbyCoffeeIds(coffeeIds){
                         resolve(obj);
                     }
                 })
+            })
+        })
+    })
+}
+
+async function insertCoffeeMyMenu(user_id,coffee_id){
+
+    return new Promise(function(resolve,reject){
+
+        pool.getConnection(function(err,connection){
+
+            var addMyMenuSql = "insert into myDrinkMenu(user_id,coffee_id) values(? , ?)";
+
+            var addMyMenuParam = [user_id, coffee_id];
+
+            connection.query(addMyMenuSql,addMyMenuParam,function(err,addMymenu){
+
+                connection.release();
+
+                if(err) return reject(err);
+                var obj ={"success" : "ok"};
+                resolve(obj);
+
             })
         })
     })

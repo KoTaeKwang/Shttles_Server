@@ -57,6 +57,16 @@ router.get('/detail/:coffee_id', function(req, res, next) {
     })
   });
 
+router.post('/myMenu', function(req, res, next) {
+    logger.log('debug','post /drink/myMenu/ %j',req.body);
+    db.addCoffeeMyMenu(req.body,function(err,success){
+        if(err){next(err)}
+        else{
+            res.json(success);
+        }
+    })
+});
+
   router.post('/insertCoffee',function(req,res,next){
     logger.log('debug','post /drink/insertCoffee');
       db.insertCoffee(req.body,function(err,success){
