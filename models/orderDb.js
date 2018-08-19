@@ -14,6 +14,7 @@ var order_id;
 exports.getOrderList = async function(user_id,callback){
     var obj =[];
 
+
     try{
         const getPoolConnectionPromise = await getPoolConnection();
         const getOrdersPromise = await getOrders(user_id,getPoolConnectionPromise);
@@ -228,11 +229,17 @@ async function getPoolConnection(){
 
 async function getOrders(user_id, connection){
     logger.log('debug','getOrders');
+
+    var curdate = new Date();
+    curdate.setDate(-14);
+
     return new Promise(function (resolve,reject) {
 
-        var getOrdersSql = "select * from orders where user_id = ? order by date DESC"
+        var getOrdersSql = "select * from orders where user_id = ? AND date >= ? order by date DESC"
 
-        connection.query(getOrdersSql,user_id,function(err,orderList){
+        var ordersParam = [user_id,curdate];
+
+        connection.query(getOrdersSql,ordersParam,function(err,orderList){
             if(err){
                 logger.log('error', 'connection error' + err);
                 connection.release();
