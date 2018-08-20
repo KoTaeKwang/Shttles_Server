@@ -67,6 +67,16 @@ router.post('/myMenu', function(req, res, next) {
     })
 });
 
+/*router.put('/myMenu', function(req, res, next) {
+    logger.log('debug','put /drink/myMenu/ %j',req.body);
+    db.deleteCoffeeMyMenu(req.body,function(err,success){
+        if(err){next(err)}
+        else{
+            res.json(success);
+        }
+    })
+});*/
+
   router.post('/insertCoffee',function(req,res,next){
     logger.log('debug','post /drink/insertCoffee');
       db.insertCoffee(req.body,function(err,success){

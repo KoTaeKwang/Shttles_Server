@@ -44,5 +44,27 @@ router.post('/insertFood',function(req,res,next){
     })
 })
 
+
+router.get('/myMenu/:user_id', function(req, res, next) {
+    logger.log('debug','get /food/myMenu/'+req.params.user_id);
+    db.getFoodMyMenu(req.params.user_id,function(err,success){
+        if(err){next(err)}
+        else{
+            res.json(success);
+        }
+    })
+});
+
+router.post('/myMenu', function(req, res, next) {
+    logger.log('debug','post /food/myMenu/ %j',req.body);
+    db.addFoodMyMenu(req.body,function(err,success){
+        if(err){next(err)}
+        else{
+            res.json(success);
+        }
+    })
+});
+
+
 module.exports = router;
 

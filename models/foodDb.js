@@ -28,7 +28,6 @@ exports.insertFood = function(data,callback){
 
 }
 
-
 exports.getFoodListByMarket = async function(market_id,callback){
 
     try{
@@ -57,8 +56,6 @@ exports.getFoodList = async function(data,callback){
 
 }
 
-
-
 exports.getFoodOption = async function(food_id,callback){
 
 
@@ -70,9 +67,40 @@ exports.getFoodOption = async function(food_id,callback){
     }catch (e) {
         callback(e,null);
     }
-}
+};
 
+exports.getFoodMyMenu = async function(user_id,callback){
 
+    try{
+        const getMyMenuFoodbyUserIDPromise = await getMyMenuFoodbyUserID(user_id);
+        const responseFoodDetailbyFoodIdsPromise = await getFoodDetailbyFoodIds(getMyMenuFoodbyUserIDPromise);
+
+        logger.log('debug','GET /food/myMenu response : %j',responseFoodDetailbyFoodIdsPromise);
+        callback(null,responseFoodDetailbyFoodIdsPromise);
+
+    }catch (e) {
+        callback(e,null);
+    }
+
+};
+
+exports.addFoodMyMenu = async function(data,callback){
+
+    var user_id = data.user_id;
+    var food_id = data.food_id;
+    var market_id = data.market_id;
+
+    try{
+
+        const insertFoodMyMenuPromise = await insertFoodMyMenu(user_id,food_id,market_id);
+        logger.log('debug','POST /food/myMenu response : %j',insertFoodMyMenuPromise);
+        callback(null,insertFoodMyMenuPromise);
+
+    }catch (e) {
+        callback(e,null);
+    }
+
+};
 
 
 async function getFoodListWithMarketId(market_id){
@@ -95,7 +123,7 @@ async function getFoodListWithMarketId(market_id){
 async function getFoodList(){
 
     return new Promise(function(resolve,reject){
-        var foodListSql = "select f.food_id, f.name, f.price, f.picture_url, f.picture_version, f.description, m.market_name  from food AS f JOIN market AS m ON f.market_id = m.market_id;";
+        var foodListSql = "select f.food_id, f.name, f.price, f.picture_url, f.picture_version, f.description, m.market_name, m.market_id from food AS f JOIN market AS m ON f.market_id = m.market_id";
         pool.getConnection(function(err,connection){
             if(err){ connection.release(); return reject(err);}
 
@@ -122,7 +150,8 @@ async function responseFoodList(foodList){
                 "picture_url" : foodList[index].picture_url,
                 "picture_version" : foodList[index].picture_version,
                 "description" : foodList[index].description,
-                "state" : foodList[index].market_name
+                "state" : foodList[index].market_name,
+                "market_id" : foodList[index].market_id
             }
 
             obj.push(objTemp);
@@ -195,4 +224,85 @@ async function responseFoodOption(foodOption){
     })
 }
 
+async function getMyMenuFoodbyUserID(user_id){
 
+    return new Promise(function(resolve,reject){
+
+        pool.getConnection(function(err,connection){
+            var myMenuSql = "Select food_id from myMarketMenu where user_id = ?";
+
+            connection.query(myMenuSql,user_id,function(err,myMenu){
+                connection.release();
+                if(err){return reject(err)};
+                logger.log('debug','query '+myMenuSql+'['+user_id+']');
+                resolve(myMenu);
+            })
+        })
+
+    });
+}
+
+async function getFoodDetailbyFoodIds(foodIds){
+    var obj = [];
+
+    return new Promise(function(resolve,reject){
+
+        if(foodIds.length==0) return resolve(emptyResult);
+
+        pool.getConnection(function(err,connection){
+            if(err){return reject(err)};
+            var foodListSql = "select f.food_id, f.name, f.price, f.picture_url, f.picture_version, f.description, m.market_name, m.market_id from food AS f JOIN market AS m ON f.market_id = m.market_id where f.food_id = ?";
+
+            forEach(foodIds,function(item,index,arr){
+
+                connection.query(foodListSql,foodIds[index].food_id,function(err,foodList){
+                    logger.log('debug','query '+foodListSql+" "+foodIds[index].food_id);
+
+                    if(err){return reject(err)};
+                    console.log("foodList : ",foodList);
+
+                    var objTemp = {
+                        "food_id" : foodList[index].food_id,
+                        "name" : foodList[index].name,
+                        "price" : foodList[index].price,
+                        "picture_url" : foodList[index].picture_url,
+                        "picture_version" : foodList[index].picture_version,
+                        "description" : foodList[index].description,
+                        "state" : foodList[index].market_name,
+                        "market_id" : foodList[index].market_id
+                    }
+
+                    obj.push(objTemp);
+
+                    if(index==foodIds.length-1){
+                        connection.release();
+                        resolve(obj);
+                    }
+                })
+            })
+        })
+    })
+}
+
+async function insertFoodMyMenu(user_id,food_id,market_id){
+
+    return new Promise(function(resolve,reject){
+
+        pool.getConnection(function(err,connection){
+
+            var addMyMenuSql = "insert into myMarketMenu(user_id,food_id,market_id) values(? , ?, ?)";
+
+            var addMyMenuParam = [user_id, food_id, market_id];
+
+            connection.query(addMyMenuSql,addMyMenuParam,function(err,addMymenu){
+
+                connection.release();
+
+                if(err) return reject(err);
+                var obj ={"result" : "success"};
+                resolve(obj);
+
+            })
+        })
+    })
+}

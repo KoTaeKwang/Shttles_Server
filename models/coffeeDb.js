@@ -101,6 +101,25 @@ exports.addCoffeeMyMenu = async function(data,callback){
 
 }
 
+
+/*
+exports.deleteCoffeeMyMenu = async function(data,callback){
+
+    var user_id = data.user_id;
+    var coffee_id = data.coffee_id;
+
+    try{
+
+        const deleteCoffeeMyMenuPromise = await deleteCoffeeMyMenu(user_id,coffee_id);
+        logger.log('debug','put /drink/myMenu response : %j',deleteCoffeeMyMenuPromise);
+        callback(null,deleteCoffeeMyMenuPromise);
+
+    }catch (e) {
+        callback(e,null);
+    }
+
+}*/
+
 async function getCoffeeList() {
 
     return new Promise(function(resolve,reject){
@@ -350,6 +369,31 @@ async function insertCoffeeMyMenu(user_id,coffee_id){
         })
     })
 }
+
+/*
+async function deleteCoffeeMyMenu(user_id,coffee_id){
+
+    return new Promise(function(resolve,reject){
+
+        pool.getConnection(function(err,connection){
+
+            var addMyMenuSql = "insert into myDrinkMenu(user_id,coffee_id) values(? , ?)";
+
+            var addMyMenuParam = [user_id, coffee_id];
+
+            connection.query(addMyMenuSql,addMyMenuParam,function(err,addMymenu){
+
+                connection.release();
+
+                if(err) return reject(err);
+                var obj ={"result" : "success"};
+                resolve(obj);
+
+            })
+        })
+    })
+}
+*/
 
 exports.insertCoffee = function(data,callback){
     var name = data.name;
