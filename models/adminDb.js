@@ -64,13 +64,15 @@ exports.postAdminOrderVerify = async function(body,callback){
         var results ={"result" : "success"};
         var verify = body.verify;
         var order_id = body.order_id;
+        var deliveryTime = body.deliveryTime;
         console.log("verify : ",verify);
         console.log("order_id : ",order_id);
+        console.log("deliveryTime : ",deliveryTime );
         const getPoolConnectionPromise = await getPoolConnection();
         const updateStatePromise = await updateOrderState(order_id,verify,getPoolConnectionPromise);
 
         if(verify != "ready"){
-            const sendMessageWithFcmPromise = await sendMessageWithFcmForAdmin(order_id,verify,updateStatePromise);
+            const sendMessageWithFcmPromise = await sendMessageWithFcmForAdmin(order_id,verify,deliveryTime,updateStatePromise);
         }
         callback(null,results);
 
@@ -80,7 +82,7 @@ exports.postAdminOrderVerify = async function(body,callback){
 
 }
 
-async function sendMessageWithFcmForAdmin(order_id,verify,connection){
+async function sendMessageWithFcmForAdmin(order_id,verify,deliveryTime,connection){
     logger.log('debug','sendMessageWithFcmForAdmin');
     return new Promise(function (resolve,reject) {
 
@@ -88,7 +90,7 @@ async function sendMessageWithFcmForAdmin(order_id,verify,connection){
 
         var subject;
         var type;
-
+        var time;
 
         if(verify == "cancel"){
             subject = "주문이 취소되었습니다.";
@@ -96,11 +98,13 @@ async function sendMessageWithFcmForAdmin(order_id,verify,connection){
         }else if(verify == "receive"){
             subject = "주문 완료되었습니다.";
             type = "order_accept";
+            time = deliveryTime;
         }
 
         var obj = {
             "subject" : subject,
-            "type" : type
+            "type" : type,
+            "deliveryTime" : time
         }
 
 
