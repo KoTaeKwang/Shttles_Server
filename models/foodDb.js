@@ -123,7 +123,7 @@ async function getFoodListWithMarketId(market_id){
 async function getFoodList(){
 
     return new Promise(function(resolve,reject){
-        var foodListSql = "select f.food_id, f.name, f.price, f.picture_url, f.picture_version, f.description, m.market_name, m.market_id from food AS f JOIN market AS m ON f.market_id = m.market_id";
+        var foodListSql = "select f.food_id, f.name, f.food_state, f.price, f.picture_url, f.picture_version, f.description, m.market_name, m.market_id from food AS f JOIN market AS m ON f.market_id = m.market_id";
         pool.getConnection(function(err,connection){
             if(err){ connection.release(); return reject(err);}
 
@@ -151,7 +151,8 @@ async function responseFoodList(foodList){
                 "picture_version" : foodList[index].picture_version,
                 "description" : foodList[index].description,
                 "state" : foodList[index].market_name,
-                "market_id" : foodList[index].market_id
+                "market_id" : foodList[index].market_id,
+                "food_state" : foodList[index].food_state
             }
 
             obj.push(objTemp);

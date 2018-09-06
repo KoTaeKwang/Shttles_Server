@@ -147,7 +147,7 @@ async function getMarketList(){
 
     return new Promise(function(resolve,reject){
 
-        var marketListSql = "Select market_id, market_name, market_picture from market"
+        var marketListSql = "Select market_id, market_name, market_picture, market_state from market"
 
         pool.getConnection(function(err,connection){
             if(err) {connection.release(); return reject(err);}
@@ -171,7 +171,8 @@ async function responseMarketList(marketList){
             var objTemp = {
                 "market_id" : marketList[index].market_id,
                 "market_name" : marketList[index].market_name,
-                "market_picture" : marketList[index].market_picture
+                "market_picture" : marketList[index].market_picture,
+                "market_state" : marketList[index].market_state
             }
             obj.push(objTemp);
 
