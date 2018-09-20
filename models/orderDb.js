@@ -27,11 +27,12 @@ exports.getOrderList = async function(user_id,callback){
             const foodList = await getFoodListByOrderId(getOrdersPromise[index].order_id,getPoolConnectionPromise);
             const makeResponseOrderListPromise = await makeResponseOrderList(getOrdersPromise[index],coffeeList,foodList);
             console.log("Response : ",makeResponseOrderListPromise);
-            logger.log('debug','order List : %j',makeResponseOrderListPromise);
+
             obj.push(makeResponseOrderListPromise);
 
             if(getOrdersPromise.length -1 == index){
                 await releaseConnection(getPoolConnectionPromise);
+                logger.log('debug','order List : %j',obj);
                 callback(null,obj);
             }
         });
@@ -253,7 +254,7 @@ async function getOrders(user_id, connection){
 }
 
 async function getCoffeeListByOrderId(orders_id,connection){
-    logger.log('debug','getCoffeeListByOrderId');
+
     return new Promise(function (resolve,reject) {
 
         var getCoffeeListByOrderIdSql = "select co.coffee_ordersId,co.count, c.name, co.price from coffee_orders AS co JOIN coffee AS c on co.coffee_id = c.coffee_id where order_id = ?"
@@ -271,7 +272,7 @@ async function getCoffeeListByOrderId(orders_id,connection){
 }
 
 async function getFoodListByOrderId(orders_id,connection){
-    logger.log('debug','getFoodListbyOrderId');
+
     return new Promise(function (resolve,reject) {
 
         var getFoodListByOrderIdSql = "select fo.food_ordersId,fo.count, f.name, fo.price from food_orders AS fo JOIN food AS f on fo.food_id = f.food_id where order_id = ?"
@@ -289,7 +290,7 @@ async function getFoodListByOrderId(orders_id,connection){
 }
 
 async function makeResponseOrderList(orders,coffeeList,foodList){
-    logger.log('debug','makeResponseOrderList');
+
     return new Promise(function (resolve,reject) {
 
         var obj ={
