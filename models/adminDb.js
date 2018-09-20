@@ -86,7 +86,7 @@ async function sendMessageWithFcmForAdmin(order_id,verify,deliveryTime,connectio
     logger.log('debug','sendMessageWithFcmForAdmin');
     return new Promise(function (resolve,reject) {
 
-        var getPushIdSql = "select u.pushId from user AS u JOIN orders AS o ON u.user_id = o.user_id where order_id = ?";
+        var getPushIdSql = "select u.pushId, u.user_id from user AS u JOIN orders AS o ON u.user_id = o.user_id where order_id = ?";
 
         var subject;
         var type;
@@ -133,7 +133,7 @@ async function sendMessageWithFcmForAdmin(order_id,verify,deliveryTime,connectio
                     logger.log('error','FCM send fail : '+err);
                     reject(err);
                 }else{
-                    logger.log('debug','FCM send success');
+                    logger.log('debug','FCM send success  userId : ' + pushId[0].user_id + 'token : ' + push_token);
                     resolve(response);
                 }
 
@@ -222,7 +222,7 @@ async function sendMessageWithFcmTest(orderInfo){
                 logger.log('error','FCM send fail : '+err);
                 reject(err);
             }else{
-                logger.log('debug','FCM send success');
+                logger.log('debug','FCM send success :');
                 resolve(response);
             }
 
