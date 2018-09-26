@@ -172,7 +172,7 @@ async function responseMarketList(marketList){
                 "market_id" : marketList[index].market_id,
                 "market_name" : marketList[index].market_name,
                 "market_picture" : marketList[index].market_picture,
-                "market_state" : marketList[index].market_state
+                "isAvailable" : marketList[index].market_state
             }
             obj.push(objTemp);
 

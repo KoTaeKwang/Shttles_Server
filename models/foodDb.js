@@ -152,7 +152,7 @@ async function responseFoodList(foodList){
                 "description" : foodList[index].description,
                 "state" : foodList[index].market_name,
                 "market_id" : foodList[index].market_id,
-                "food_state" : foodList[index].food_state
+                "isAvailable" : foodList[index].food_state
             }
 
             obj.push(objTemp);
