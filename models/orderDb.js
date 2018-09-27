@@ -109,6 +109,19 @@ exports.insertOrder = async function (data, callback) {
 
 }
 
+
+exports.changeOrderState = async function (data,callback){
+
+    try{
+        const getPoolConnectionPromise = await getPoolConnection();
+        const updateOrderStatePromise = await updateOrderState(getPoolConnectionPromise);
+        await releaseConnection(getPoolConnectionPromise);
+        callback(null,'success');
+    }catch (e) {
+        callback(e,null);
+    }
+}
+
 exports.test = async function (data,callback){
 
     var obj = "shuttles gogogogogogo letgogogogo";
@@ -121,6 +134,30 @@ exports.test = async function (data,callback){
         callback(e,null);
     }
 }
+
+async function updateOrderState(connection){
+    logger.log('debug','scheduel - updateOrderState');
+    return new Promise(function(resolve,reject){
+        var updateOrderStateSql;
+        var date = new Date();
+
+        date.setMonth(date.getMonth()-1);
+
+        updateOrderStateSql = "UPDATE orders SET state = 99 where date < ?";
+
+        var query = connection.query(updateOrderStateSql,date,function(err,results){
+            logger.log('debug','query : '+query.sql);
+            if(err){return connection.rollback(function(){
+                connection.release();
+                return reject(err);
+            })
+            };
+            resolve(connection);
+        })
+
+    })
+}
+
 
 async function releaseConnection(connection){
 

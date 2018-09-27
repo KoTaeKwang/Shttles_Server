@@ -4,6 +4,9 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var cron = require('node-cron');
+var pool = require('./mysql');
+var orderDB = require('./models/orderDb');
 
 var index = require('./routes/index');
 var users = require('./routes/users');
@@ -56,6 +59,17 @@ app.use(function(err, req, res, next) {
   //res.status(err.status).send('error was occured '+err.message);
   res.status(500).json(obj);
 });
+
+cron.schedule("* 23 * * *",function () {
+    logger.log('debug','change order state over 1 month');
+
+    orderDB.changeOrderState(null,function(err,success){
+      if(err){next(err);}
+      else{
+        logger.log('debug','success change order state');
+      }
+    });
+})
 
 app.listen(3000);
 console.log("Shuttles Server started with port 3000!");

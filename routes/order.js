@@ -44,7 +44,7 @@ router.post('/',function(req,res,next){
 // test order
 router.post('/test',function(req,res,next){
     logger.log('debug','get /order');
-    db.test(req,function(err,success){
+    db.changeOrderState(req,function(err,success){
         if(err){next(err)}
         else{
             res.json(success);
