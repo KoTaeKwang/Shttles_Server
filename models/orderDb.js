@@ -273,7 +273,7 @@ async function getOrders(user_id, connection){
 
     return new Promise(function (resolve,reject) {
 
-        var getOrdersSql = "select * from orders where user_id = ? AND date >= ? order by date DESC"
+        var getOrdersSql = "select * from orders where user_id = ? AND date >= ? AND state != 99 order by date DESC"
 
         var ordersParam = [user_id,curdate];
 
