@@ -174,7 +174,8 @@ async function responseCoffeeList(coffeeList){
                 "description" : coffeeList[index].description,
                 "price" : price,
                 "state" : coffeeList[index].state,
-                "isAvailable" : coffeeList[index].coffee_state
+                "isAvailable" : coffeeList[index].coffee_state,
+                "isTodayMenu" : coffeeList[index].today_menu
             }
 
             obj.push(objTemp);
