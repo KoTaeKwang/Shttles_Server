@@ -294,7 +294,7 @@ async function getAdminOrders(connection){
     logger.log('debug','getAdminOrders');
     return new Promise(function (resolve,reject) {
 
-        var getOrdersSql = "select * from orders order by date DESC"
+        var getOrdersSql = "select * from orders where state != 99 order by date DESC"
 
         connection.query(getOrdersSql,function(err,orderList){
             if(err){
@@ -314,7 +314,7 @@ async function getCoffeeListByOrderId(orders_id,connection){
 
     return new Promise(function (resolve,reject) {
 
-        var getCoffeeListByOrderIdSql = "select co.coffee_ordersId,co.count, c.name, co.price from coffee_orders AS co JOIN coffee AS c on co.coffee_id = c.coffee_id where order_id = ? AND state != 99"
+        var getCoffeeListByOrderIdSql = "select co.coffee_ordersId,co.count, c.name, co.price from coffee_orders AS co JOIN coffee AS c on co.coffee_id = c.coffee_id where order_id = ?"
 
         connection.query(getCoffeeListByOrderIdSql, orders_id,function(err,coffeeList){
             if(err){
