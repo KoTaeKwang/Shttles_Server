@@ -311,9 +311,10 @@ async function getAdminOrders(connection){
 
 async function getCoffeeListByOrderId(orders_id,connection){
     logger.log('debug','getCoffeeListByOrderId');
+
     return new Promise(function (resolve,reject) {
 
-        var getCoffeeListByOrderIdSql = "select co.coffee_ordersId,co.count, c.name, co.price from coffee_orders AS co JOIN coffee AS c on co.coffee_id = c.coffee_id where order_id = ?"
+        var getCoffeeListByOrderIdSql = "select co.coffee_ordersId,co.count, c.name, co.price from coffee_orders AS co JOIN coffee AS c on co.coffee_id = c.coffee_id where order_id = ? AND state != 99"
 
         connection.query(getCoffeeListByOrderIdSql, orders_id,function(err,coffeeList){
             if(err){
