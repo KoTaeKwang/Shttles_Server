@@ -60,7 +60,7 @@ app.use(function(err, req, res, next) {
   res.status(500).json(obj);
 });
 
-cron.schedule("* 23 * * *",function () {
+cron.schedule("0 23 * * *",function () {
     logger.log('debug','change order state over 1 month');
 
     orderDB.changeOrderState(null,function(err,success){
